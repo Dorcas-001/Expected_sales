@@ -1,4 +1,3 @@
-
 import streamlit as st
 import matplotlib.colors as mcolors
 import plotly.express as px
@@ -8,6 +7,8 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from itertools import chain
+from matplotlib.ticker import FuncFormatter
+
 
 # Centered and styled main title using inline styles
 st.markdown('''
@@ -28,11 +29,67 @@ st.markdown('''
 
 st.markdown('<h1 class="main-title">KPI METRICS VIEW DASHBOARD</h1>', unsafe_allow_html=True)
 
-data = pd.read_excel('sales Data.xlsx')
-# Ensure 'created_time' is a datetime object
-data['created_time'] = pd.to_datetime(data['created_time'])
-# Drop all rows that have a duplicated value in the 'Employer group' column
-df = data.drop_duplicates(subset='Employer group', keep="first")
+filepath="prospect_sales_data.xlsx"
+sheet_name = "Eden - Team 1 LeadSheet (Master"
+sheet_name1="Target"
+# Read all sheets into a dictionary of DataFrames
+df0 = pd.read_excel(filepath, sheet_name=sheet_name)
+df1=pd.read_excel(filepath, sheet_name=sheet_name1)
+
+
+
+# Filter rows where the Start Date is in 2024
+
+# Calculate metrics
+scaling_factor = 1_000_000
+
+target_2024 = (df1["Target"].sum())/scaling_factor
+df_proactiv_target_2024 = df1[df1['Product'] == 'ProActiv']
+df_health_target_2024 = df1[df1['Product'] == 'Health']
+df_renewals_2024 = df1[df1['Product'] == 'Renewals']
+
+    # Calculate Basic Premium RWFs for specific combinations
+total_renewals_ytd = (df_renewals_2024['Target'].sum())/scaling_factor
+total_pro_target_ytd = (df_proactiv_target_2024['Target'].sum())/scaling_factor
+total_health_target_ytd = (df_health_target_2024['Target'].sum())/scaling_factor
+
+
+df1['Target'] = df1['Target'] * (9 / 12)
+
+df1['Target'] = df1['Target'] / 9
+
+# Add a 'Month' column for filtering
+months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September']
+
+# Create a DataFrame for each month from January to September
+expanded_rows = []
+for _, row in df1.iterrows():
+    for month in months:
+        expanded_rows.append([row['Product'], row['Owner'], month, row['Target']])
+
+# Create the expanded DataFrame
+df_expanded = pd.DataFrame(expanded_rows, columns=['Product', 'Owner', 'Start Month', 'Target'])
+
+
+
+df1 = pd.concat([df1]*9, ignore_index=True)
+df1['Start Month'] = months * (len(df1) // len(months))
+df1['Start Year'] = 2024
+
+
+
+df = pd.concat([df0, df1])
+
+
+
+
+# Ensure the 'Start Date' column is in datetime format
+df['Expected Close Date'] = pd.to_datetime(df['Expected Close Date'])
+df['Last Contact Date'] = pd.to_datetime(df['Last Contact Date'])
+
+df['Days Difference'] = df['Expected Close Date'] - df['Last Contact Date']
+
+
 # Sidebar styling and logo
 st.markdown("""
     <style>
@@ -80,76 +137,230 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Extract additional columns for filtering
-df['year'] = df['created_time'].dt.year
-df['MonthName'] = df['created_time'].dt.strftime('%B')
-df['Client Segment'] = df['Client Segment'].astype(str)
-df['Engagement'] = df['Engagement'].astype(str)
-df['Employer group'] = df['Employer group'].astype(str)
 
+
+
+# Get minimum and maximum dates for the date input
+startDate = df["Expected Close Date"].min()
+endDate = df["Expected Close Date"].max()
+
+# Define CSS for the styled date input boxes
+st.markdown("""
+    <style>
+    .date-input-box {
+        border-radius: 10px;
+        text-align: left;
+        margin: 5px;
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+    .date-input-title {
+        font-size: 1.2em;
+        margin-bottom: 5px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+  
+# Create 2-column layout for date inputs
+col1, col2 = st.columns(2)
+
+# Function to display date input in styled boxes
+def display_date_input(col, title, default_date, min_date, max_date):
+    col.markdown(f"""
+        <div class="date-input-box">
+            <div class="date-input-title">{title}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    return col.date_input("", default_date, min_value=min_date, max_value=max_date)
+
+# Display date inputs
+with col1:
+    date1 = pd.to_datetime(display_date_input(col1, "Expected Close Date", startDate, startDate, endDate))
+
+with col2:
+    date2 = pd.to_datetime(display_date_input(col2, "Expected Close Date", endDate, startDate, endDate))
+
+
+# Dictionary to map month names to their order
+month_order = {
+    "January": 1, "February": 2, "March": 3, "April": 4, 
+    "May": 5, "June": 6, "July": 7, "August": 8, 
+    "September": 9, "October": 10, "November": 11, "December": 12
+}
+
+# Sort months based on their order
+sorted_months = sorted(df['Start Month'].dropna().unique(), key=lambda x: month_order[x])
 
 
 # Sidebar for filters
 st.sidebar.header("Filters")
-year = st.sidebar.multiselect("Select Year", options=sorted(df['year'].unique()))
-month = st.sidebar.multiselect("Select Month", options=sorted(df['MonthName'].unique()))
-client_type = st.sidebar.multiselect("Select Client Type", options=sorted(df['Client Segment'].unique()))
-eng_type = st.sidebar.multiselect("Select Engagement Type", options=sorted(df['Engagement'].unique()))
-em_group = st.sidebar.multiselect("Select Employer group", options=sorted(df['Employer group'].unique()))
+year = st.sidebar.multiselect("Select Year", options=sorted(df['Start Year'].dropna().unique()))
+month = st.sidebar.multiselect("Select Month", options=sorted_months)
+product = st.sidebar.multiselect("Select Product", options=df['Product'].unique())
+status = st.sidebar.multiselect("Select Status", options=df['Status'].unique())
+segment = st.sidebar.multiselect("Select Client Segment", options=df['Client Segment'].unique())
+channel = st.sidebar.multiselect("Select Channel", options=df['Channel'].unique())
 
-## Filter by year
-if year:
-    df = df[df['year'].isin(year)]
+engage = st.sidebar.multiselect("Select Engagement", options=df['Engagement'].unique())
+owner = st.sidebar.multiselect("Select Sales Person", options=df['Owner'].unique())
+broker = st.sidebar.multiselect("Select Broker", options=df['Broker'].unique())
+client_name = st.sidebar.multiselect("Select Client Name", options=df['Property'].unique())
 
-# Filter by client type
-if client_type:
-    df = df[df['Client Segment'].isin(client_type)]
 
-# Filter by month
-if month:
-    df = df[df['MonthName'].isin(month)]
 
-# Filter by engagement type
-if eng_type:
-    df = df[df['Engagement'].isin(eng_type)]
-if em_group:
-    df = df[df['Employer group'].isin(em_group)]
 
+
+
+# Apply filters to the DataFrame
+if 'Start Year' in df.columns and year:
+    df = df[df['Start Year'].isin(year)]
+if 'Start Month' in df.columns and month:
+    df = df[df['Start Month'].isin(month)]
+if 'Product' in df.columns and product:
+    df = df[df['Product'].isin(product)]
+if 'Status' in df.columns and status:
+    df = df[df['Status'].isin(status)]
+if 'Client Segment' in df.columns and segment:
+    df = df[df['Client Segment'].isin(segment)]
+if 'Broker' in df.columns and broker:
+    df = df[df['Broker'].isin(broker)]
+if 'Channel' in df.columns and broker:
+    df = df[df['Channel'].isin(channel)]
+if 'Owner' in df.columns and owner:
+    df = df[df['Owner'].isin(owner)]
+if 'Property' in df.columns and client_name:
+    df = df[df['Property'].isin(client_name)]
+
+# Determine the filter description
 filter_description = ""
 if year:
     filter_description += f"{', '.join(map(str, year))} "
-if client_type:
-    filter_description += f"{', '.join(map(str, client_type))} "
+if owner:
+    filter_description += f"{', '.join(map(str, owner))} "
 if month:
     filter_description += f"{', '.join(month)} "
-if eng_type:
-    filter_description += f"{', '.join(eng_type)} "
+if product:
+    filter_description += f"{', '.join(product)} "
 if not filter_description:
-    filter_description = "All Data"
+    filter_description = "All data"
 
+
+
+    # Filter the concatenated DataFrame to include only endorsements
+df_hares = df[(df['Client Segment'] == 'Hares')]
+df_elephants = df[df['Client Segment'] == 'Elephant']
+df_tiger = df[df['Client Segment'] == 'Tigers']
+df_whale = df[df['Client Segment'] == 'Whale']
+
+
+df_proactiv = df[df['Product'] == 'ProActiv']
+df_health = df[df['Product'] == 'Health']
+
+
+df_closed = df[(df['Status'] == 'Closed 💪')]
+df_lost = df[df['Status'] == 'Lost 😢']
+df_closed
+df_agent = df[df['Channel'] == 'Agent']
+df_direct = df[df['Channel'] == 'Direct']
+df_broker = df[df['Channel'] == 'Broker']
+
+df_proactiv_target = df[df['Product'] == 'ProActiv']
+df_health_target = df[df['Product'] == 'Health']
+df_renewals = df[df['Product'] == 'Renewals']
+
+df_closed_health = df_closed[df_closed['Product'] == 'Health']
+df_lost_pro = df_lost[df_lost['Product'] == 'ProActiv']
+df_closed_pro = df_closed[df_closed['Product'] == 'ProActiv']
+df_lost_health = df_lost[df_lost['Product'] == 'Health']
+
+df_proactiv_target = df[df['Product'] == 'ProActiv']
+df_health_target = df[df['Product'] == 'Health']
+df_renewals = df[df['Product'] == 'Renewals']
+df_closed
+df["Basic Premium RWF"] = pd.to_numeric(df["Basic Premium RWF"], errors="coerce")
 
 if not df.empty:
-     # Calculate metrics
-    scaling_factor = 1_000_000  # For millions
-    scaled = 1_000_000_000  # for billions
+
+# Calculate the Basic Premium RWF for endorsements only
+
+    scale=1_000_000  # For millions
+
+    total_pre = (df["Basic Premium RWF"].sum())
+
+    # Scale the sums
+    total_pre_scaled = total_pre /scale 
+
+    total_hares = (df_hares['Basic Premium RWF'].sum())/scale
+    total_tiger = (df_tiger['Basic Premium RWF'].sum())/scale
+    total_elephant = (df_elephants['Basic Premium RWF'].sum())/scale
+    total_whale = (df_whale['Basic Premium RWF'].sum())/scale
+
+    # Calculate Basic Premium RWFs for specific combinations
+    total_proactiv= (df_proactiv['Basic Premium RWF'].sum()) / scale
+    total_health = (df_health['Basic Premium RWF'].sum()) / scale
+    
+    # Calculate Basic Premium RWFs for specific combinations
+    total_agent = (df_agent['Basic Premium RWF'].sum())/scale
+    total_broker = (df_broker['Basic Premium RWF'].sum())/scale
+    total_direct = (df_direct['Basic Premium RWF'].sum())/scale
 
 
-    total_clients = df["Employer group"].nunique()
-    total_lives = df["Employee Size"].sum()
-    total_in_val = df["RWF Value"].sum()
-    average_pre_per_life = df["RWF Value"].mean()
-    gwp_average = total_clients * total_lives * average_pre_per_life
-    total_items = len(df)
+    # Calculate Basic Premium RWFs for specific combinations
+    total_closed = (df_closed['Basic Premium RWF'].sum())/scale
+    total_lost = (df_lost['Basic Premium RWF'].sum())/scale
 
-    partners = len(df[df['Engagement'] == 'Partnership'])
-    contract = len(df[df['Engagement'] == 'Contract'])
-    priority = len(df[df['Priority'] == 'High'])
-    total_items = len(df)
-    closed_items = len(df[df['Status'] == 'Closed 💪'])
-    percentage_closed = (closed_items / total_items) * 100
-    total_val_scaled = total_in_val / scaling_factor
-    average_pre_scaled = average_pre_per_life/scaling_factor
-    gwp_average_scaled = gwp_average/scaled
+    total_closed
+    # Calculate Basic Premium RWFs for specific combinations
+    total_closed_health = (df_closed_health['Basic Premium RWF'].sum())/scale
+    total_closed_pro = (df_closed_pro['Basic Premium RWF'].sum())/scale
+
+    # Calculate Basic Premium RWFs for specific combinations
+    total_lost_health = (df_lost_health['Basic Premium RWF'].sum())/scale
+    total_lost_pro = (df_lost_pro['Basic Premium RWF'].sum())/scale
+
+    # Calculate total premiums for specific combinations
+    total_pro_target = (df_proactiv_target['Target'].sum())/scale
+    total_health_target = (df_health_target['Target'].sum())/scale
+    health_variance = (total_closed_health-total_health_target)
+    health_percent_var = (health_variance/total_health_target) *100
+    
+    pro_variance = total_closed_pro-total_pro_target
+    pro_percent_var = (pro_variance/total_pro_target) *100
+
+    df["Employee Size"] = pd.to_numeric(df["Employee Size"], errors='coerce').fillna(0).astype(int)
+    df["Dependents"] = pd.to_numeric(df["Targeted Lives (depentands) "], errors='coerce').fillna(0).astype(int)
+
+    total_clients = df["Property"].nunique()
+    total_mem = df["Employee Size"].sum()
+    total_dependents = df["Dependents"].sum()
+    total_lives = total_mem +total_dependents
+    average_dep = total_mem/total_dependents
+    average_pre = df["Basic Premium RWF"].mean()
+    average_premium_per_life = total_pre/total_mem
+    gwp_average = total_lives * average_premium_per_life / total_clients
+
+
+
+    tot_lost =  total_lost/total_pre
+    tot_closed = total_closed/total_pre
+    percent_closed_health = (total_closed_health/total_health)*100
+    percent_closed_pro = (total_closed_pro/total_proactiv)*100
+    percent_lost_health = (total_lost_health/total_health)*100
+    percent_lost_pro = (total_lost_pro/total_proactiv)*100
+    percent_closed = (total_closed/total_pre_scaled)*100
+    percent_lost = (total_lost/total_pre_scaled)*100
+
+
+    # Scale the sums
+    average_pre_scaled = average_pre/scale
+    gwp_average_scaled = gwp_average/scale
+
+    scaled = 1_000
+
+    # Calculate key metrics
+    lowest_premium = df['Basic Premium RWF'].min() /scaled
+    highest_premium = df['Basic Premium RWF'].max() / scaling_factor
 
     # Create 4-column layout for metric cards# Define CSS for the styled boxes and tooltips
     st.markdown("""
@@ -174,74 +385,94 @@ if not df.empty:
         }
         .metric-title {
             color: #e66c37; /* Change this color to your preferred title color */
-            font-size: 1em;
+            font-size: 0.9em;
             margin-bottom: 10px;
         }
         .metric-value {
             color: #009DAE;
-            font-size: 1.5em;
+            font-size: 1em;
         }
-        .tooltip {
-            visibility: hidden;
-            width: 200px;
-            background-color: #555;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%; /* Position the tooltip above the text */
-            left: 50%;
-            margin-left: -100px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .tooltip::after {
-            content: "";
-            position: absolute;
-            top: 100%; /* Arrow at the bottom */
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: #555 transparent transparent transparent;
-        }
-        .metric-box:hover .tooltip {
-            visibility: visible;
-            opacity: 1;
-        }
+
         </style>
         """, unsafe_allow_html=True)
 
+
+
     # Function to display metrics in styled boxes with tooltips
-    def display_metric(col, title, value, tooltip_text):
+    def display_metric(col, title, value):
         col.markdown(f"""
             <div class="metric-box">
                 <div class="metric-title">{title}</div>
                 <div class="metric-value">{value}</div>
-                <div class="tooltip">{tooltip_text}</div>
             </div>
             """, unsafe_allow_html=True)
 
 
-
-    st.markdown('<h2 class="custom-subheader">For Prospective Sales</h2>', unsafe_allow_html=True)    
-
-
+    st.markdown('<h3 class="custom-subheader">For Expected Health Insurance or ProActiv Sales</h3>', unsafe_allow_html=True)    
 
 
     # Display metrics
-    cols1, cols2, cols3 = st.columns(3)
-    display_metric(cols1, "Total Clients", total_clients, "The total number of potential clients.")
-    display_metric(cols2, "Total Premium", f"RWF {total_val_scaled:.0f} M", "The total expected premium in millions of RWF.")
-    display_metric(cols3, "Estimated Lives Covered", total_lives, "The total number of lives covered depending on the employee size.")
-    display_metric(cols1, "Average Estimated Premium", f"RWF {average_pre_scaled:.0f}M", "The average estimated premium per life in millions of RWF.")
-    display_metric(cols2, "Average GWP", f"RWF {gwp_average_scaled:.0f} B", "The average Gross Written Premium in billions of RWF (total number of clients x total lives covered x average Premium per life")
-    display_metric(cols3, "Percentage Closed", f"{percentage_closed:.1f} %", "The percentage of propective sales that have been closed.")
-    display_metric(cols1, "Estimated Partners", partners, "Clients with Potential Partnership deals")
-    display_metric(cols2, "Estimated Contracts", contract, "Clients with Potential contract deals")
-    display_metric(cols3, "Highest Priority Clients", priority, "Clients with  High Priority ")
+    col1, col2, col3= st.columns(3)
+    display_metric(col1, f"Total Clients ({filter_description.strip()})", total_clients)
+    display_metric(col2, f"Total Expected Sales ({filter_description.strip()})", f"RWF {total_pre_scaled:.0f} M")
+    display_metric(col3, "Total Principal Members", total_mem)
+
+    display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
+    display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
+
+    display_metric(col3, "Total Closed Sales", f"RWF {total_closed:.0f} M")
+    display_metric(col1, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
+    display_metric(col2, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
+    display_metric(col3, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
+
+
+    # Calculate key metrics
+    st.markdown('<h2 class="custom-subheader">For Expected Lives Covered</h2>', unsafe_allow_html=True)    
+
+    cols1,cols2, cols3, cols4 = st.columns(4)
+
+    display_metric(cols1, "Expected Lives Covered", f"{total_lives:.0f}")
+    display_metric(cols2, "Total Principal Members", total_mem)
+    display_metric(cols3, "Total Dependents", total_dependents)
+    display_metric(cols4, "Average Dependents Per Principal Member", f"{average_dep:.0f}")
+
+
+    st.markdown('<h2 class="custom-subheader">For Expected Health Insurance Sales</h2>', unsafe_allow_html=True) 
+    col1, col2, col3 = st.columns(3)
+    display_metric(col1, "Total Expected Health Sales", value=f"RWF {total_health:.0f} M")
+    display_metric(col2, "Total Closed Health Sales", value=f"RWF {total_closed_health:.0f} M")
+    display_metric(col3, "Total Lost Health Sales", value=f"RWF {total_lost_health:.0f} M")
+
+    display_metric(col1, "Percentage Closed Health Sales", value=f" {percent_closed_health:.1f} %")
+    display_metric(col2, "Percentage Lost Health Sales", value=f" {percent_lost_health:.1f} %")
+
+    st.markdown('<h2 class="custom-subheader">For Expected ProActiv Sales</h2>', unsafe_allow_html=True) 
+    col1, col2, col3= st.columns(3)
+
+    display_metric(col1, "Total Expected ProActiv Sales", value=f"RWF {total_proactiv:.0f} M")
+    display_metric(col2, "Total Closed ProActiv Sales", value=f"RWF {total_closed_pro:.0f} M")
+    display_metric(col3, "Total Lost ProActiv Sales", value=f"RWF {total_lost_health:.0f} M")
+
+    display_metric(col1, "Percentage Closed ProActiv Sales", value=f" {percent_closed_pro:.1f} %")
+    display_metric(col2, "Percentage Lost ProActiv Sales", value=f" {percent_lost_pro:.1f} %")
+
+    st.markdown('<h2 class="custom-subheader">For Health Insurance Target</h2>', unsafe_allow_html=True) 
+    col1, col2, col3= st.columns(3)
+
+    display_metric(col1, "2024 Target Health Sales", f"RWF {total_health_target_ytd:.0f} M")
+    display_metric(col2, "YTD Health Target Sales", f"RWF {total_health_target:.0f} M")
+    display_metric(col3, "YTD Closed Health Sales", f"RWF {total_closed_health:.0f} M")
+    display_metric(col1, "Variance", f"RWF {health_variance:.1f} M")
+    display_metric(col2, "Percentage Variance", value=f"{health_percent_var:.2f} %")
+
+    st.markdown('<h2 class="custom-subheader">For ProActiv Target</h2>', unsafe_allow_html=True) 
+    col1, col2, col3= st.columns(3)
+
+    display_metric(col1, "2024 Target ProActiv Sales", f"RWF {total_pro_target_ytd:.0f} M")
+    display_metric(col2, "YTD ProActiv Target Sales", f"RWF {total_pro_target:.0f} M")
+    display_metric(col3, "YTD Closed ProActiv Sales", f"RWF {total_closed_pro:.0f} M")
+    display_metric(col1, "Variance", f"RWF {pro_variance:.0f} M")
+    display_metric(col2, "Percentage Variance", value=f"{pro_percent_var:.0f} %")
 
 
 

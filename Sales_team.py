@@ -508,7 +508,7 @@ if not df.empty:
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3>Total Sales and Number of Sales by Sales Team</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Total Sales and Number of Sales by Sales Team</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_premium_by_intermediary, use_container_width=True)
 
     # Group data by "Intermediary name" and sum the Basic Premium RWF
