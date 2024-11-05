@@ -27,20 +27,20 @@ st.markdown('''
     </style>
 ''', unsafe_allow_html=True)
 
-st.markdown('<h1 class="main-title">Expected Sales Overview</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">Closed Sales View</h1>', unsafe_allow_html=True)
 
 filepath="prospect_sales_data.xlsx"
 sheet_name = "Eden - Team 1 LeadSheet (Master"
 # Read all sheets into a dictionary of DataFrames
-df = pd.read_excel(filepath, sheet_name=sheet_name)
+data = pd.read_excel(filepath, sheet_name=sheet_name)
 
 
 
 # Ensure the 'Start Date' column is in datetime format
-df['Expected Close Date'] = pd.to_datetime(df['Expected Close Date'])
-df['Last Contact Date'] = pd.to_datetime(df['Last Contact Date'])
+data['Expected Close Date'] = pd.to_datetime(data['Expected Close Date'])
+data['Last Contact Date'] = pd.to_datetime(data['Last Contact Date'])
 
-df['Days Difference'] = (df['Expected Close Date'] - df['Last Contact Date']).dt.days
+data['Days Difference'] = (data['Expected Close Date'] - data['Last Contact Date']).dt.days
 
 
 # Sidebar styling and logo
@@ -90,6 +90,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+df = data[(data['Status'] == 'Closed 💪')]
 
 
 
@@ -152,7 +153,6 @@ st.sidebar.header("Filters")
 year = st.sidebar.multiselect("Select Year", options=sorted(df['Start Year'].dropna().unique()))
 month = st.sidebar.multiselect("Select Month", options=sorted_months)
 product = st.sidebar.multiselect("Select Product", options=df['Product'].unique())
-status = st.sidebar.multiselect("Select Status", options=df['Status'].unique())
 segment = st.sidebar.multiselect("Select Client Segment", options=df['Client Segment'].unique())
 channel = st.sidebar.multiselect("Select Channel", options=df['Channel'].unique())
 
@@ -170,8 +170,6 @@ if 'Start Month' in df.columns and month:
     df = df[df['Start Month'].isin(month)]
 if 'Product' in df.columns and product:
     df = df[df['Product'].isin(product)]
-if 'Status' in df.columns and status:
-    df = df[df['Status'].isin(status)]
 if 'Client Segment' in df.columns and segment:
     df = df[df['Client Segment'].isin(segment)]
 if 'Broker' in df.columns and broker:
@@ -201,8 +199,8 @@ if not filter_description:
     # Filter the concatenated DataFrame to include only endorsements
 
 
-df_proactiv = df[df['Product'] == 'ProActiv']
-df_health = df[df['Product'] == 'Health']
+df_proactiv = data[data['Product'] == 'ProActiv']
+df_health = data[data['Product'] == 'Health']
 
 
 df_closed = df[(df['Status'] == 'Closed 💪')]
@@ -222,7 +220,7 @@ if not df.empty:
      # Calculate metrics
     scale=1_000_000  # For millions
 
-    total_pre = (df["Basic Premium RWF"].sum())
+    total_pre = (data["Basic Premium RWF"].sum())
 
     # Scale the sums
     total_pre_scaled = total_pre / scale
@@ -231,25 +229,25 @@ if not df.empty:
     total_health = (df_health['Basic Premium RWF'].sum()) / scale
 
     # Calculate Basic Premium RWFs for specific combinations
-    total_closed = (df_closed['Basic Premium RWF'].sum())/scale
+    total_closed = (df['Basic Premium RWF'].sum())/scale
     total_lost = (df_lost['Basic Premium RWF'].sum())/scale
 
     # Calculate Basic Premium RWFs for specific combinations
     total_closed_health = (df_closed_health['Basic Premium RWF'].sum())/scale
     total_closed_pro = (df_closed_pro['Basic Premium RWF'].sum())/scale
 
-    df["Employee Size"] = pd.to_numeric(df["Employee Size"], errors='coerce').fillna(0).astype(int)
-    df["Dependents"] = pd.to_numeric(df["Targeted Lives (depentands) "], errors='coerce').fillna(0).astype(int)
+    data["Employee Size"] = pd.to_numeric(data["Employee Size"], errors='coerce').fillna(0).astype(int)
+    data["Dependents"] = pd.to_numeric(data["Targeted Lives (depentands) "], errors='coerce').fillna(0).astype(int)
 
     # Calculate Basic Premium RWFs for specific combinations
     total_lost_health = (df_lost_health['Basic Premium RWF'].sum())/scale
     total_lost_pro = (df_lost_pro['Basic Premium RWF'].sum())/scale
-    total_clients = df["Property"].nunique()
-    total_mem = df["Employee Size"].sum()
-    total_dependents = df["Dependents"].sum()
+    total_clients = data["Property"].nunique()
+    total_mem = data["Employee Size"].sum()
+    total_dependents = data["Dependents"].sum()
     total_lives = total_mem +total_dependents
     average_dep = total_mem/total_dependents
-    average_pre = df["Basic Premium RWF"].mean()
+    average_pre = data["Basic Premium RWF"].mean()
     average_premium_per_life = total_pre/total_mem
     gwp_average = total_lives * average_premium_per_life / total_clients
 
@@ -323,29 +321,28 @@ if not df.empty:
     display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
 
     display_metric(col3, "Total Closed Sales", f"RWF {total_closed:.0f} M")
-    display_metric(col1, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
-    display_metric(col2, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
-    display_metric(col3, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
+    # display_metric(col1, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
+    # display_metric(col2, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
+    # display_metric(col3, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
 
 
-    st.markdown('<h2 class="custom-subheader">For Expected Health Insurance Sales</h2>', unsafe_allow_html=True) 
+    st.markdown('<h2 class="custom-subheader">For Closed Health Insurance Sales</h2>', unsafe_allow_html=True) 
     col1, col2, col3 = st.columns(3)
     display_metric(col1, "Total Expected Health Sales", value=f"RWF {total_health:.0f} M")
     display_metric(col2, "Total Closed Health Sales", value=f"RWF {total_closed_health:.0f} M")
-    display_metric(col3, "Total Lost Health Sales", value=f"RWF {total_lost_health:.0f} M")
+    # display_metric(col3, "Total Lost Health Sales", value=f"RWF {total_lost_health:.0f} M")
 
-    display_metric(col1, "Percentage Closed Health Sales", value=f" {percent_closed_health:.1f} %")
-    display_metric(col2, "Percentage Lost Health Sales", value=f" {percent_lost_health:.1f} %")
+    display_metric(col3, "Percentage Closed Health Sales", value=f" {percent_closed_health:.1f} %")
+    # display_metric(col2, "Percentage Lost Health Sales", value=f" {percent_lost_health:.1f} %")
 
-    st.markdown('<h2 class="custom-subheader">For Expected ProActiv Sales</h2>', unsafe_allow_html=True) 
+    st.markdown('<h2 class="custom-subheader">For Closed ProActiv Sales</h2>', unsafe_allow_html=True) 
     col1, col2, col3= st.columns(3)
 
     display_metric(col1, "Total Expected ProActiv Sales", value=f"RWF {total_proactiv:.0f} M")
     display_metric(col2, "Total Closed ProActiv Sales", value=f"RWF {total_closed_pro:.0f} M")
-    display_metric(col3, "Total Lost ProActiv Sales", value=f"RWF {total_lost_health:.0f} M")
-
-    display_metric(col1, "Percentage Closed ProActiv Sales", value=f" {percent_closed_pro:.1f} %")
-    display_metric(col2, "Percentage Lost ProActiv Sales", value=f" {percent_lost_pro:.1f} %")
+    # display_metric(col3, "Total Lost ProActiv Sales", value=f"RWF {total_lost_health:.0f} M")
+    display_metric(col3, "Percentage Closed ProActiv Sales", value=f" {percent_closed_pro:.1f} %")
+    # display_metric(col2, "Percentage Lost ProActiv Sales", value=f" {percent_lost_pro:.1f} %")
 
 
     # Sidebar styling and logo
@@ -429,7 +426,7 @@ if not df.empty:
             height=600,  # Adjust height as needed
         )
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Expected Sales By Product Over Time</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Total Sales By Product Over Time</h3>', unsafe_allow_html=True)
         # Display the plot in Streamlit
         st.plotly_chart(fig_area, use_container_width=True)
 
@@ -465,7 +462,7 @@ if not df.empty:
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Average Yearly Expected Sales by Product per Employer Group</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Average Yearly Sales by Product per Employer Group</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_yearly_avg_premium, use_container_width=True)
 
 
@@ -554,7 +551,7 @@ if not df.empty:
 
     with cl1:
         # Display the header
-        st.markdown('<h3 class="custom-subheader">Total Expected Sales by Product</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Total Sales by Product</h3>', unsafe_allow_html=True)
 
 
         # Create a donut chart
@@ -571,7 +568,7 @@ if not df.empty:
 
     with cl2:
         # Display the header
-        st.markdown('<h3 class="custom-subheader">Total Expected Sales by Client Segment</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Total Sales by Client Segment</h3>', unsafe_allow_html=True)
 
 
         # Create a donut chart
@@ -637,7 +634,7 @@ if not df.empty:
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Top Ten Expected Health Insurance Sales by Sales Team</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Top 10 Health Insurance Sales by Sales Persons</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_premium_by_intermediary, use_container_width=True)
 
     # Group data by "Intermediary name" and sum the Basic Premium RWF
@@ -675,12 +672,14 @@ if not df.empty:
             ),
 
             font=dict(color='Black'),
-            xaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
+            xaxis=dict(
+                 title = "Sales Persons",
+                 title_font=dict(size=14), tickfont=dict(size=12)),
             margin=dict(l=0, r=0, t=30, b=50),
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Total Expected ProActiv Sales by Sales Team</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Total ProActiv Sales by Sales Persons</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_premium_by_intermediary, use_container_width=True)
 
 
@@ -692,7 +691,7 @@ if not df.empty:
 
     with cls2:
         # Display the header
-        st.markdown('<h3 class="custom-subheader">Number of Expected Sales By Channel</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Number of Sales By Channel</h3>', unsafe_allow_html=True)
 
         # Create a donut chart
         fig = px.pie(prod_counts, names="Channel", values="Count", hole=0.5, template="plotly_dark", color_discrete_sequence=custom_colors)
@@ -710,7 +709,7 @@ if not df.empty:
 
     with cls1:
         # Display the header
-        st.markdown('<h3 class="custom-subheader">Number of Expected Sales By Status</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Number of Sales By Status</h3>', unsafe_allow_html=True)
 
         # Create a donut chart
         fig = px.pie(prod_counts, names="Status", values="Count", hole=0.5, template="plotly_dark", color_discrete_sequence=custom_colors)
@@ -774,7 +773,7 @@ if not df.empty:
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Top 10 Brokers and their Expected Sales</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Top 10 Sales by Brokers</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_premium_by_intermediary, use_container_width=True)
 
 
@@ -820,5 +819,5 @@ if not df.empty:
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Top 10 Employer Groups and their Expected Sales</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Top 10 Sales Employer Groups</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_premium_by_intermediary, use_container_width=True)
