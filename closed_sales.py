@@ -27,7 +27,7 @@ st.markdown('''
     </style>
 ''', unsafe_allow_html=True)
 
-st.markdown('<h1 class="main-title">Closed Sales View</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">CLOSED & LOST SALES VIEW</h1>', unsafe_allow_html=True)
 
 filepath="prospect_sales_data.xlsx"
 sheet_name = "Eden - Team 1 LeadSheet (Master"
@@ -90,8 +90,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-df = data[(data['Status'] == 'Closed 💪')]
-
+df = data[data['Status'].isin(['Closed 💪', 'Lost 😢'])]
 
 
 # Get minimum and maximum dates for the date input
@@ -136,7 +135,6 @@ with col2:
     date2 = pd.to_datetime(display_date_input(col2, "Expected Close Date", endDate, startDate, endDate))
 
 
-
 # Dictionary to map month names to their order
 month_order = {
     "January": 1, "February": 2, "March": 3, "April": 4, 
@@ -152,12 +150,12 @@ sorted_months = sorted(df['Start Month'].dropna().unique(), key=lambda x: month_
 st.sidebar.header("Filters")
 year = st.sidebar.multiselect("Select Year", options=sorted(df['Start Year'].dropna().unique()))
 month = st.sidebar.multiselect("Select Month", options=sorted_months)
+status = st.sidebar.multiselect("Select Status", options=df['Status'].unique())
 product = st.sidebar.multiselect("Select Product", options=df['Product'].unique())
 segment = st.sidebar.multiselect("Select Client Segment", options=df['Client Segment'].unique())
 channel = st.sidebar.multiselect("Select Channel", options=df['Channel'].unique())
-
 engage = st.sidebar.multiselect("Select Engagement", options=df['Engagement'].unique())
-owner = st.sidebar.multiselect("Select Sales Person", options=df['Owner'].unique())
+owner = st.sidebar.multiselect("Select Sales Person", options=df['Sales person'].unique())
 broker = st.sidebar.multiselect("Select Broker", options=df['Broker'].unique())
 client_name = st.sidebar.multiselect("Select Client Name", options=df['Property'].unique())
 
@@ -170,14 +168,16 @@ if 'Start Month' in df.columns and month:
     df = df[df['Start Month'].isin(month)]
 if 'Product' in df.columns and product:
     df = df[df['Product'].isin(product)]
+if 'Status' in df.columns and status:
+    df = df[df['Status'].isin(status)]
 if 'Client Segment' in df.columns and segment:
     df = df[df['Client Segment'].isin(segment)]
 if 'Broker' in df.columns and broker:
     df = df[df['Broker'].isin(broker)]
 if 'Channel' in df.columns and broker:
     df = df[df['Channel'].isin(channel)]
-if 'Owner' in df.columns and owner:
-    df = df[df['Owner'].isin(owner)]
+if 'Sales person' in df.columns and owner:
+    df = df[df['Sales person'].isin(owner)]
 if 'Property' in df.columns and client_name:
     df = df[df['Property'].isin(client_name)]
 
@@ -229,7 +229,7 @@ if not df.empty:
     total_health = (df_health['Basic Premium RWF'].sum()) / scale
 
     # Calculate Basic Premium RWFs for specific combinations
-    total_closed = (df['Basic Premium RWF'].sum())/scale
+    total_closed = (df_closed['Basic Premium RWF'].sum())/scale
     total_lost = (df_lost['Basic Premium RWF'].sum())/scale
 
     # Calculate Basic Premium RWFs for specific combinations
@@ -321,28 +321,28 @@ if not df.empty:
     display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
 
     display_metric(col3, "Total Closed Sales", f"RWF {total_closed:.0f} M")
-    # display_metric(col1, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
-    # display_metric(col2, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
-    # display_metric(col3, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
+    display_metric(col1, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
+    display_metric(col2, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
+    display_metric(col3, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
 
 
     st.markdown('<h2 class="custom-subheader">For Closed Health Insurance Sales</h2>', unsafe_allow_html=True) 
     col1, col2, col3 = st.columns(3)
     display_metric(col1, "Total Expected Health Sales", value=f"RWF {total_health:.0f} M")
     display_metric(col2, "Total Closed Health Sales", value=f"RWF {total_closed_health:.0f} M")
-    # display_metric(col3, "Total Lost Health Sales", value=f"RWF {total_lost_health:.0f} M")
+    display_metric(col3, "Total Lost Health Sales", value=f"RWF {total_lost_health:.0f} M")
 
-    display_metric(col3, "Percentage Closed Health Sales", value=f" {percent_closed_health:.1f} %")
-    # display_metric(col2, "Percentage Lost Health Sales", value=f" {percent_lost_health:.1f} %")
+    display_metric(col1, "Percentage Closed Health Sales", value=f" {percent_closed_health:.1f} %")
+    display_metric(col2, "Percentage Lost Health Sales", value=f" {percent_lost_health:.1f} %")
 
     st.markdown('<h2 class="custom-subheader">For Closed ProActiv Sales</h2>', unsafe_allow_html=True) 
     col1, col2, col3= st.columns(3)
 
     display_metric(col1, "Total Expected ProActiv Sales", value=f"RWF {total_proactiv:.0f} M")
     display_metric(col2, "Total Closed ProActiv Sales", value=f"RWF {total_closed_pro:.0f} M")
-    # display_metric(col3, "Total Lost ProActiv Sales", value=f"RWF {total_lost_health:.0f} M")
-    display_metric(col3, "Percentage Closed ProActiv Sales", value=f" {percent_closed_pro:.1f} %")
-    # display_metric(col2, "Percentage Lost ProActiv Sales", value=f" {percent_lost_pro:.1f} %")
+    display_metric(col3, "Total Lost ProActiv Sales", value=f"RWF {total_lost_health:.0f} M")
+    display_metric(col1, "Percentage Closed ProActiv Sales", value=f" {percent_closed_pro:.1f} %")
+    display_metric(col2, "Percentage Lost ProActiv Sales", value=f" {percent_lost_pro:.1f} %")
 
 
     # Sidebar styling and logo
@@ -396,42 +396,57 @@ if not df.empty:
 
     custom_colors = ["#006E7F", "#e66c37", "#461b09","#009DAE", "#f8a785", "#CC3636"]
 
-    # Group data by "Expected Close Date" and "Product" and sum the "Basic Premium RWF"
-    area_chart_total_insured = df.groupby([df["Expected Close Date"].dt.to_period('D'), 'Product'])['Basic Premium RWF'].sum().reset_index(name='Basic Premium RWF')
-    area_chart_total_insured['Expected Close Date'] = area_chart_total_insured['Expected Close Date'].dt.to_timestamp()
+
+    
+    # Function to format y-axis labels in millions
+    def millions(x, pos):
+        'The two args are the value and tick position'
+        return '%1.0fM' % (x * 1e-6)
+
+    # Group by day and Client Segment, then sum the Basic Premium RWF
+    area_chart_total_insured = df.groupby([df["Expected Close Date"].dt.strftime("%Y-%m-%d"), 'Status'])['Basic Premium RWF'].sum().reset_index(name='Basic Premium RWF')
+
+    # Sort by the Expected Close Date
+    area_chart_total_insured = area_chart_total_insured.sort_values("Expected Close Date")
+
 
     with cols1:
-        # Create an area chart for the total insured premium per day
-        fig_area = go.Figure()
+        # Create the area chart for Basic Premium RWF
+        fig1, ax1 = plt.subplots()
 
+        # Pivot the DataFrame for easier plotting
+        pivot_df_insured = area_chart_total_insured.pivot(index='Expected Close Date', columns='Status', values='Basic Premium RWF').fillna(0)
+        
+        # Plot the stacked area chart
+        pivot_df_insured.plot(kind='area', stacked=True, ax=ax1, color=custom_colors[:len(pivot_df_insured.columns)])
 
-        # Add traces for each product
-        for idx, product in enumerate(area_chart_total_insured['Product'].unique()):
-            product_data = area_chart_total_insured[area_chart_total_insured['Product'] == product]
-            fig_area.add_trace(go.Scatter(
-                x=product_data['Expected Close Date'],
-                y=product_data['Basic Premium RWF'],
-                fill='tozeroy',
-                mode='lines',
-                marker=dict(color=custom_colors[idx % len(custom_colors)]),
-                line=dict(color=custom_colors[idx % len(custom_colors)]),
-                name=product
-            ))
+        # Remove the border around the chart
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['left'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
 
-        fig_area.update_layout(
-            xaxis_title="Date",
-            yaxis_title="Expected Basic Premium RWF",
-            font=dict(color='black'),
-            width=1200,  # Adjust width as needed
-            height=600,  # Adjust height as needed
-        )
+        # Set x-axis title
+        ax1.set_xlabel("Date", fontsize=9, color="gray")
+        plt.xticks(rotation=45, fontsize=9, color="gray")
+
+        # Set y-axis title
+        ax1.set_ylabel("Basic Premium RWF", fontsize=9, color="gray")
+        plt.yticks(fontsize=9, color="gray")
+
+        # Format the y-axis
+        formatter = FuncFormatter(millions)
+        ax1.yaxis.set_major_formatter(formatter)
+
+        st.markdown('<h3 class="custom-subheader">Total Sales By Status Over Time</h3>', unsafe_allow_html=True)
+
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Total Sales By Product Over Time</h3>', unsafe_allow_html=True)
-        # Display the plot in Streamlit
-        st.plotly_chart(fig_area, use_container_width=True)
+        st.pyplot(fig1)
+        # Display the chart in Streamlit
+
 
     # Group data by "Start Month Year" and "Client Segment" and calculate the average Basic Premium RWF
-    yearly_avg_premium = df.groupby(['Start Year', 'Product'])['Basic Premium RWF'].mean().unstack().fillna(0)
+    yearly_avg_premium = df.groupby(['Start Year', 'Status'])['Basic Premium RWF'].mean().unstack().fillna(0)
 
     # Define custom colors
 
@@ -462,8 +477,9 @@ if not df.empty:
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Average Yearly Sales by Product per Employer Group</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Average Yearly Sales by Status per Employer Group</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_yearly_avg_premium, use_container_width=True)
+
 
 
 
@@ -533,7 +549,7 @@ if not df.empty:
         fig_yearly_avg_days_diff.update_layout(
             barmode='group',  # Grouped bar chart
             xaxis_title="Start Year",
-            yaxis_title="Average Days Difference",
+            yaxis_title="Average Days Difference (Days)",
             font=dict(color='Black'),
             xaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
             yaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
@@ -544,6 +560,80 @@ if not df.empty:
         # Display the plot in Streamlit
         st.markdown('<h3 class="custom-subheader">Average Yearly Days Difference by Client Segment per Employer Group</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_yearly_avg_days_diff)
+
+    cols1, cols2 = st.columns(2)
+
+    # Group data by "Start Month Year" and "Client Segment" and calculate the average Basic Premium RWF
+    yearly_avg_premium = df.groupby(['Start Year', 'Product'])['Basic Premium RWF'].mean().unstack().fillna(0)
+
+    # Define custom colors
+
+    with cols1:
+        # Create the grouped bar chart
+        fig_yearly_avg_premium = go.Figure()
+
+        for idx, Client_Segment in enumerate(yearly_avg_premium.columns):
+            fig_yearly_avg_premium.add_trace(go.Bar(
+                x=yearly_avg_premium.index,
+                y=yearly_avg_premium[Client_Segment],
+                name=Client_Segment,
+                textposition='inside',
+                textfont=dict(color='white'),
+                hoverinfo='x+y+name',
+                marker_color=custom_colors[idx % len(custom_colors)]  # Cycle through custom colors
+            ))
+
+        fig_yearly_avg_premium.update_layout(
+            barmode='group',  # Grouped bar chart
+            xaxis_title="Year",
+            yaxis_title="Basic Premium",
+            font=dict(color='Black'),
+            xaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
+            yaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
+            margin=dict(l=0, r=0, t=30, b=50),
+            height= 450
+        )
+
+        # Display the chart in Streamlit
+        st.markdown('<h3 class="custom-subheader">Average Yearly Sales by Product per Employer Group</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_yearly_avg_premium, use_container_width=True)
+
+    # Group data by "Start Month Year" and "Client Segment" and calculate the average Basic Premium RWF
+    yearly_avg_premium = df.groupby(['Owner', 'Status'])['Basic Premium RWF'].mean().unstack().fillna(0)
+
+    # Define custom colors
+
+    with cols2:
+        # Create the grouped bar chart
+        fig_yearly_avg_premium = go.Figure()
+
+        for idx, Client_Segment in enumerate(yearly_avg_premium.columns):
+            fig_yearly_avg_premium.add_trace(go.Bar(
+                x=yearly_avg_premium.index,
+                y=yearly_avg_premium[Client_Segment],
+                name=Client_Segment,
+                textposition='inside',
+                textfont=dict(color='white'),
+                hoverinfo='x+y+name',
+                marker_color=custom_colors[idx % len(custom_colors)]  # Cycle through custom colors
+            ))
+
+        fig_yearly_avg_premium.update_layout(
+            barmode='group',  # Grouped bar chart
+            xaxis_title="Sales Team",
+            yaxis_title="Basic Premium",
+            font=dict(color='Black'),
+            xaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
+            yaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
+            margin=dict(l=0, r=0, t=30, b=50),
+            height= 450
+        )
+
+        # Display the chart in Streamlit
+        st.markdown('<h3 class="custom-subheader">Average Sales Status by Sales Team per Employer Group</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_yearly_avg_premium, use_container_width=True)
+
+    cl1, cl2 =st.columns(2)
 
  # Calculate the Basic Premium RWF by Client Segment
     int_owner = df.groupby("Product")["Basic Premium RWF"].sum().reset_index()
@@ -591,13 +681,13 @@ if not df.empty:
             st.dataframe(int_seg.style.format(precision=2))
         
     # Group data by "Owner" and sum the Basic Premium RWF
-    premium_by_intermediary = df_health.groupby('Owner')['Basic Premium RWF'].sum().reset_index()
+    premium_by_intermediary = df_health.groupby('Sales person')['Basic Premium RWF'].sum().reset_index()
 
     # Calculate the number of sales by "Owner"
-    sales_by_cover = df_health.groupby('Owner').size().reset_index(name='Number of Sales')
+    sales_by_cover = df_health.groupby('Sales person').size().reset_index(name='Number of Sales')
 
     # Merge the premium and sales data
-    merged_df = premium_by_intermediary.merge(sales_by_cover, on='Owner')
+    merged_df = premium_by_intermediary.merge(sales_by_cover, on='Sales person')
 
     # Sort the merged data by Basic Premium RWF in descending order and select the top 10 owners
     top_10_owners = merged_df.sort_values(by='Basic Premium RWF', ascending=False).head(10)
@@ -610,7 +700,7 @@ if not df.empty:
 
         # Add bar trace for Basic Premium RWF
         fig_premium_by_intermediary.add_trace(go.Bar(
-            x=top_10_owners['Owner'],
+            x=top_10_owners['Sales person'],
             y=top_10_owners['Basic Premium RWF'],
             text=top_10_owners['Basic Premium RWF'],
             textposition='inside',
@@ -638,13 +728,13 @@ if not df.empty:
         st.plotly_chart(fig_premium_by_intermediary, use_container_width=True)
 
     # Group data by "Intermediary name" and sum the Basic Premium RWF
-    premium_by_intermediary = df_proactiv.groupby('Owner')['Basic Premium RWF'].sum().reset_index()
+    premium_by_intermediary = df_proactiv.groupby('Sales person')['Basic Premium RWF'].sum().reset_index()
 
     # Calculate the number of sales by "Intermediary name"
-    sales_by_intermediary = df_proactiv.groupby('Owner').size().reset_index(name='Number of Sales')
+    sales_by_intermediary = df_proactiv.groupby('Sales person').size().reset_index(name='Number of Sales')
 
     # Merge the premium and sales data
-    merged_data = premium_by_intermediary.merge(sales_by_intermediary, on='Owner')
+    merged_data = premium_by_intermediary.merge(sales_by_intermediary, on='Sales person')
 
 
     with cls2:
@@ -652,7 +742,7 @@ if not df.empty:
 
         # Add bar trace for Basic Premium RWF
         fig_premium_by_intermediary.add_trace(go.Bar(
-            x=merged_data['Owner'],
+            x=merged_data['Sales person'],
             y=merged_data['Basic Premium RWF'],
             text=merged_data['Basic Premium RWF'],
             textposition='inside',
@@ -763,7 +853,7 @@ if not df.empty:
         fig_premium_by_intermediary.update_layout(
             xaxis_title="Sales Person",
             yaxis=dict(
-                title="Broker",
+                title="Basic Premium RWF",
                 titlefont=dict(color="#009DAE"),
                 tickfont=dict(color="#009DAE")
             ),
