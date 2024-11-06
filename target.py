@@ -27,7 +27,7 @@ st.markdown('''
     </style>
 ''', unsafe_allow_html=True)
 
-st.markdown('<h1 class="main-title">KPI METRICS VIEW DASHBOARD</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">SALES vs TARGET VIEW</h1>', unsafe_allow_html=True)
 
 filepath="prospect_sales_data.xlsx"
 sheet_name = "Eden - Team 1 LeadSheet (Master"
