@@ -36,52 +36,7 @@ sheet_name1="Target"
 df0 = pd.read_excel(filepath, sheet_name=sheet_name)
 df1=pd.read_excel(filepath, sheet_name=sheet_name1)
 
-
-
-# Filter rows where the Start Date is in 2024
-
-# Calculate metrics
-scaling_factor = 1_000_000
-
-target_2024 = (df1["Target"].sum())/scaling_factor
-df_proactiv_target_2024 = df1[df1['Product'] == 'ProActiv']
-df_health_target_2024 = df1[df1['Product'] == 'Health']
-df_renewals_2024 = df1[df1['Product'] == 'Renewals']
-
-    # Calculate Basic Premium RWFs for specific combinations
-total_renewals_ytd = (df_renewals_2024['Target'].sum())/scaling_factor
-total_pro_target_ytd = (df_proactiv_target_2024['Target'].sum())/scaling_factor
-total_health_target_ytd = (df_health_target_2024['Target'].sum())/scaling_factor
-
-
-df1['Target'] = df1['Target'] * (9 / 12)
-
-df1['Target'] = df1['Target'] / 9
-
-# Add a 'Month' column for filtering
-months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September']
-
-# Create a DataFrame for each month from January to September
-expanded_rows = []
-for _, row in df1.iterrows():
-    for month in months:
-        expanded_rows.append([row['Product'], row['Owner'], month, row['Target']])
-
-# Create the expanded DataFrame
-df_expanded = pd.DataFrame(expanded_rows, columns=['Product', 'Owner', 'Start Month', 'Target'])
-
-
-
-df1 = pd.concat([df1]*9, ignore_index=True)
-df1['Start Month'] = months * (len(df1) // len(months))
-df1['Start Year'] = 2024
-
-
-
 df = pd.concat([df0, df1])
-
-
-
 
 # Ensure the 'Start Date' column is in datetime format
 df['Expected Close Date'] = pd.to_datetime(df['Expected Close Date'])
@@ -201,9 +156,9 @@ product = st.sidebar.multiselect("Select Product", options=df['Product'].unique(
 status = st.sidebar.multiselect("Select Status", options=df['Status'].unique())
 segment = st.sidebar.multiselect("Select Client Segment", options=df['Client Segment'].unique())
 channel = st.sidebar.multiselect("Select Channel", options=df['Channel'].unique())
-
-engage = st.sidebar.multiselect("Select Engagement", options=df['Engagement'].unique())
+team = st.sidebar.multiselect("Select Team", options=df['Owner'].unique())
 owner = st.sidebar.multiselect("Select Sales Person", options=df['Sales person'].unique())
+engage = st.sidebar.multiselect("Select Engagement", options=df['Engagement'].unique())
 broker = st.sidebar.multiselect("Select Broker", options=df['Broker'].unique())
 client_name = st.sidebar.multiselect("Select Client Name", options=df['Property'].unique())
 
@@ -227,6 +182,8 @@ if 'Broker' in df.columns and broker:
     df = df[df['Broker'].isin(broker)]
 if 'Channel' in df.columns and broker:
     df = df[df['Channel'].isin(channel)]
+if 'Owner' in df.columns and team:
+    df = df[df['Owner'].isin(team)]
 if 'Sales person' in df.columns and owner:
     df = df[df['Sales person'].isin(owner)]
 if 'Property' in df.columns and client_name:
@@ -244,6 +201,33 @@ if product:
     filter_description += f"{', '.join(product)} "
 if not filter_description:
     filter_description = "All data"
+
+
+# Calculate metrics
+scaling_factor = 1_000_000
+
+target_2024 = df["Target"].sum() / scaling_factor
+df_proactiv_target_2024 = df[df['Product'] == 'ProActiv']
+df_health_target_2024 = df[df['Product'] == 'Health']
+df_renewals_2024 = df[df['Product'] == 'Renewals']
+
+# Calculate Basic Premium RWFs for specific combinations
+total_renewals_ytd = df_renewals_2024['Target'].sum() / scaling_factor
+total_pro_target_ytd = df_proactiv_target_2024['Target'].sum() / scaling_factor
+total_health_target_ytd = df_health_target_2024['Target'].sum() / scaling_factor
+
+# Adjust the 'Target' column
+df['Target'] = df['Target'] * (10 / 12) / 10
+
+# Add a 'Month' column for filtering
+months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October']
+num_months = len(months)
+
+# Calculate the monthly target for each row
+df['Target'] = df['Target'] / num_months
+
+
+df = pd.concat([df]*10, ignore_index=True)
 
 
 
@@ -414,14 +398,15 @@ if not df.empty:
     display_metric(col1, f"Total Clients ({filter_description.strip()})", total_clients)
     display_metric(col2, f"Total Expected Sales ({filter_description.strip()})", f"RWF {total_pre_scaled:.0f} M")
     display_metric(col3, "Total Principal Members", total_mem)
+    display_metric(col1, "Total Target 2024", f"{target_2024:.0f} M")
 
-    display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
-    display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
+    # display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
+    # display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
 
-    display_metric(col3, "Total Closed Sales", f"RWF {total_closed:.0f} M")
-    display_metric(col1, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
-    display_metric(col2, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
-    display_metric(col3, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
+    display_metric(col2, "Total Closed Sales", f"RWF {total_closed:.0f} M")
+    display_metric(col3, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
+    display_metric(col1, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
+    display_metric(col2, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
 
 
     # Calculate key metrics

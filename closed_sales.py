@@ -196,6 +196,43 @@ if not filter_description:
 
 
 
+# Handle non-finite values in 'Start Year' column
+df['Start Year'] = df['Start Year'].fillna(0).astype(int)  # Replace NaN with 0 or any specific value
+
+# Handle non-finite values in 'Start Month' column
+df['Start Month'] = df['Start Month'].fillna('Unknown')
+
+# Create a 'Month-Year' column
+df['Month-Year'] = df['Start Month'] + ' ' + df['Start Year'].astype(str)
+
+# Function to sort month-year combinations
+def sort_key(month_year):
+    month, year = month_year.split()
+    return (int(year), month_order.get(month, 0))  # Use .get() to handle 'Unknown' month
+
+# Extract unique month-year combinations and sort them
+month_years = sorted(df['Month-Year'].unique(), key=sort_key)
+
+# Select slider for month-year range
+selected_month_year_range = st.select_slider(
+    "Select Month-Year Range",
+    options=month_years,
+    value=(month_years[0], month_years[-1])
+)
+
+# Filter DataFrame based on selected month-year range
+start_month_year, end_month_year = selected_month_year_range
+start_month, start_year = start_month_year.split()
+end_month, end_year = end_month_year.split()
+
+start_index = (int(start_year), month_order.get(start_month, 0))
+end_index = (int(end_year), month_order.get(end_month, 0))
+
+# Filter DataFrame based on month-year order indices
+df = df[
+    df['Month-Year'].apply(lambda x: (int(x.split()[1]), month_order.get(x.split()[0], 0))).between(start_index, end_index)
+]
+
     # Filter the concatenated DataFrame to include only endorsements
 
 

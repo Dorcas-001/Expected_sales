@@ -38,47 +38,11 @@ df1=pd.read_excel(filepath, sheet_name=sheet_name1)
 
 df0  = df0[(df0['Status'] == 'Closed 💪')]
 df0 = df0[df0["Start Year"]==2024]
-df0
-tot = df0["Basic Premium RWF"].sum()
-tot
+
 
 # Filter rows where the Start Date is in 2024
 
-# Calculate metrics
-scaling_factor = 1_000_000
 
-target_2024 = (df1["Target"].sum())/scaling_factor
-df_proactiv_target_2024 = df1[df1['Product'] == 'ProActiv']
-df_health_target_2024 = df1[df1['Product'] == 'Health']
-df_renewals_2024 = df1[df1['Product'] == 'Renewals']
-
-    # Calculate Basic Premium RWFs for specific combinations
-total_renewals_ytd = (df_renewals_2024['Target'].sum())/scaling_factor
-total_pro_target_ytd = (df_proactiv_target_2024['Target'].sum())/scaling_factor
-total_health_target_ytd = (df_health_target_2024['Target'].sum())/scaling_factor
-
-
-df1['Target'] = df1['Target'] * (10 / 12)
-
-df1['Target'] = df1['Target'] / 10
-
-# Add a 'Month' column for filtering
-months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September']
-
-# Create a DataFrame for each month from January to September
-expanded_rows = []
-for _, row in df1.iterrows():
-    for month in months:
-        expanded_rows.append([row['Product'], row['Owner'], month, row['Target']])
-
-# Create the expanded DataFrame
-df_expanded = pd.DataFrame(expanded_rows, columns=['Product', 'Owner', 'Start Month', 'Target'])
-
-
-
-df1 = pd.concat([df1]*10, ignore_index=True)
-df1['Start Month'] = months * (len(df1) // len(months))
-df1['Start Year'] = 2024
 
 
 
@@ -233,16 +197,51 @@ if product:
 if not filter_description:
     filter_description = "All data"
 
-df['Start Year'] = df['Start Year'].astype(int)
+
+# Calculate metrics
+scaling_factor = 1_000_000
+
+target_2024 = df["Target"].sum() / scaling_factor
+target_2024
+df_proactiv_target_2024 = df[df['Product'] == 'ProActiv']
+df_health_target_2024 = df[df['Product'] == 'Health']
+df_renewals_2024 = df[df['Product'] == 'Renewals']
+
+# Calculate Basic Premium RWFs for specific combinations
+total_renewals_ytd = df_renewals_2024['Target'].sum() / scaling_factor
+total_pro_target_ytd = df_proactiv_target_2024['Target'].sum() / scaling_factor
+total_health_target_ytd = df_health_target_2024['Target'].sum() / scaling_factor
+
+# Adjust the 'Target' column
+df['Target'] = df['Target'] * (10 / 12) / 10
+
+# Add a 'Month' column for filtering
+months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October']
+num_months = len(months)
+
+# Calculate the monthly target for each row
+df['Target'] = df['Target'] / num_months
+
+
+df = pd.concat([df]*10, ignore_index=True)
+df['Start Month'] = months * (len(df) // len(months))
+df['Start Year'] = 2024
+
+
+
+# Handle non-finite values in 'Start Year' column
+df['Start Year'] = df['Start Year'].fillna(0).astype(int)  # Replace NaN with 0 or any specific value
+
+# Handle non-finite values in 'Start Month' column
+df['Start Month'] = df['Start Month'].fillna('Unknown')
 
 # Create a 'Month-Year' column
 df['Month-Year'] = df['Start Month'] + ' ' + df['Start Year'].astype(str)
 
-
 # Function to sort month-year combinations
 def sort_key(month_year):
     month, year = month_year.split()
-    return (int(year), month_order[month])
+    return (int(year), month_order.get(month, 0))  # Use .get() to handle 'Unknown' month
 
 # Extract unique month-year combinations and sort them
 month_years = sorted(df['Month-Year'].unique(), key=sort_key)
@@ -259,15 +258,13 @@ start_month_year, end_month_year = selected_month_year_range
 start_month, start_year = start_month_year.split()
 end_month, end_year = end_month_year.split()
 
-start_index = (int(start_year), month_order[start_month])
-end_index = (int(end_year), month_order[end_month])
+start_index = (int(start_year), month_order.get(start_month, 0))
+end_index = (int(end_year), month_order.get(end_month, 0))
 
 # Filter DataFrame based on month-year order indices
 df = df[
-    df['Month-Year'].apply(lambda x: (int(x.split()[1]), month_order[x.split()[0]])).between(start_index, end_index)
+    df['Month-Year'].apply(lambda x: (int(x.split()[1]), month_order.get(x.split()[0], 0))).between(start_index, end_index)
 ]
-
-
 
     # Filter the concatenated DataFrame to include only endorsements
 
@@ -361,9 +358,6 @@ if not df.empty:
     gwp_average = total_lives * average_premium_per_life / total_clients
 
 
-
-    tot_lost =  total_lost/total_pre
-    tot_closed = total_closed/total_pre
     percent_closed_health = (total_closed_health/total_health)*100
     percent_closed_pro = (total_closed_pro/total_proactiv)*100
 
