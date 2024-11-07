@@ -198,11 +198,11 @@ if not filter_description:
     filter_description = "All data"
 
 
+
 # Calculate metrics
 scaling_factor = 1_000_000
 
 target_2024 = df["Target"].sum() / scaling_factor
-target_2024
 df_proactiv_target_2024 = df[df['Product'] == 'ProActiv']
 df_health_target_2024 = df[df['Product'] == 'Health']
 df_renewals_2024 = df[df['Product'] == 'Renewals']
@@ -213,20 +213,23 @@ total_pro_target_ytd = df_proactiv_target_2024['Target'].sum() / scaling_factor
 total_health_target_ytd = df_health_target_2024['Target'].sum() / scaling_factor
 
 # Adjust the 'Target' column
-df['Target'] = df['Target'] * (10 / 12) / 10
+df['Target'] = df['Target'] * (10 / 12)
 
 # Add a 'Month' column for filtering
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October']
 num_months = len(months)
 
-# Calculate the monthly target for each row
-df['Target'] = df['Target'] / num_months
+# Create a new DataFrame to hold the replicated data
+df_replicated = pd.DataFrame()
 
+# Replicate the dataset for each month
+for month in months:
+    df_month = df.copy()
+    df_month['Month'] = month
+    df_replicated = pd.concat([df_replicated, df_month], ignore_index=True)
 
-df = pd.concat([df]*10, ignore_index=True)
-df['Start Month'] = months * (len(df) // len(months))
-df['Start Year'] = 2024
-
+# Adjust the 'Target' column by dividing by the number of months
+df_replicated['Target'] = df_replicated['Target'] / num_months
 
 
 # Handle non-finite values in 'Start Year' column
@@ -284,26 +287,17 @@ df_agent = df[df['Channel'] == 'Agent']
 df_direct = df[df['Channel'] == 'Direct']
 df_broker = df[df['Channel'] == 'Broker']
 
-df_proactiv_target = df[df['Product'] == 'ProActiv']
-df_health_target = df[df['Product'] == 'Health']
-df_renewals = df[df['Product'] == 'Renewals']
 
 df_closed_health = df_closed[df_closed['Product'] == 'Health']
 df_lost_pro = df_lost[df_lost['Product'] == 'ProActiv']
 df_closed_pro = df_closed[df_closed['Product'] == 'ProActiv']
 df_lost_health = df_lost[df_lost['Product'] == 'Health']
 
+
 df_proactiv_target = df[df['Product'] == 'ProActiv']
 df_health_target = df[df['Product'] == 'Health']
 df_renewals = df[df['Product'] == 'Renewals']
 
-df_agent_pro = df_agent[df_agent['Product'] == 'ProActiv']
-df_broker_pro = df_broker[df_broker['Product'] == 'ProActiv']
-df_direct_pro = df_direct[df_direct['Product'] == 'ProActiv']
-
-df_agent_health = df_agent[df_agent['Product'] == 'Health']
-df_broker_health = df_broker[df_broker['Product'] == 'Health']
-df_direct_health = df_direct[df_direct['Product'] == 'Health']
 
 df["Basic Premium RWF"] = pd.to_numeric(df["Basic Premium RWF"], errors="coerce")
 
@@ -317,11 +311,7 @@ if not df.empty:
     scale=1_000_000  # For millions
 
     total_pre = (df["Basic Premium RWF"].sum())
-
     # Scale the sums
-    total_pre_scaled = total_pre /scale 
-
-
 
     # Calculate Basic Premium RWFs for specific combinations
     total_proactiv= (df_proactiv['Basic Premium RWF'].sum()) / scale
@@ -329,14 +319,12 @@ if not df.empty:
 
     # Calculate Basic Premium RWFs for specific combinations
     total_closed = (df_closed['Basic Premium RWF'].sum())/scale
-    total_lost = (df_lost['Basic Premium RWF'].sum())/scale
 
     # Calculate Basic Premium RWFs for specific combinations
     total_closed_health = (df_closed_health['Basic Premium RWF'].sum())/scale
     total_closed_pro = (df_closed_pro['Basic Premium RWF'].sum())/scale
 
 
-    # Calculate Basic Premium RWFs for specific combinations
     total_pro_target = (df_proactiv_target['Target'].sum())/scale
     total_health_target = (df_health_target['Target'].sum())/scale
     health_variance = (total_closed_health-total_health_target)
@@ -358,11 +346,6 @@ if not df.empty:
     gwp_average = total_lives * average_premium_per_life / total_clients
 
 
-    percent_closed_health = (total_closed_health/total_health)*100
-    percent_closed_pro = (total_closed_pro/total_proactiv)*100
-
-    percent_closed = (total_closed/total_pre_scaled)*100
-
 
     # Scale the sums
     average_pre_scaled = average_pre/scale
@@ -370,9 +353,6 @@ if not df.empty:
 
     scaled = 1_000
 
-    # Calculate key metrics
-    lowest_premium = df['Basic Premium RWF'].min() /scaled
-    highest_premium = df['Basic Premium RWF'].max() / scaling_factor
 
   
 
@@ -433,16 +413,14 @@ if not df.empty:
     # display_metric(col2, "Average Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
     # display_metric(col3, "Average Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
 
-
-
     st.markdown('<h2 class="custom-subheader">For Health Insurance Target</h2>', unsafe_allow_html=True) 
     col1, col2, col3= st.columns(3)
 
     display_metric(col1, "2024 Target Health Sales", f"RWF {total_health_target_ytd:.0f} M")
     display_metric(col2, "YTD Health Target Sales", f"RWF {total_health_target:.0f} M")
     display_metric(col3, "YTD Closed Health Sales", f"RWF {total_closed_health:.0f} M")
-    display_metric(col1, "Variance", f"RWF {health_variance:.1f} M")
-    display_metric(col2, "Percentage Variance", value=f"{health_percent_var:.2f} %")
+    display_metric(col1, "Variance", f"RWF {health_variance:.0f} M")
+    display_metric(col2, "Percentage Variance", value=f"{health_percent_var:.0f} %")
 
     st.markdown('<h2 class="custom-subheader">For ProActiv Target</h2>', unsafe_allow_html=True) 
     col1, col2, col3= st.columns(3)

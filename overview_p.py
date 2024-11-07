@@ -209,26 +209,29 @@ scaling_factor = 1_000_000
 target_2024 = df["Target"].sum() / scaling_factor
 df_proactiv_target_2024 = df[df['Product'] == 'ProActiv']
 df_health_target_2024 = df[df['Product'] == 'Health']
-df_renewals_2024 = df[df['Product'] == 'Renewals']
 
 # Calculate Basic Premium RWFs for specific combinations
-total_renewals_ytd = df_renewals_2024['Target'].sum() / scaling_factor
 total_pro_target_ytd = df_proactiv_target_2024['Target'].sum() / scaling_factor
 total_health_target_ytd = df_health_target_2024['Target'].sum() / scaling_factor
 
 # Adjust the 'Target' column
-df['Target'] = df['Target'] * (10 / 12) / 10
+df['Target'] = df['Target'] * (10 / 12)
 
 # Add a 'Month' column for filtering
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October']
 num_months = len(months)
 
-# Calculate the monthly target for each row
-df['Target'] = df['Target'] / num_months
+# Create a new DataFrame to hold the replicated data
+df_replicated = pd.DataFrame()
 
+# Replicate the dataset for each month
+for month in months:
+    df_month = df.copy()
+    df_month['Month'] = month
+    df_replicated = pd.concat([df_replicated, df_month], ignore_index=True)
 
-df = pd.concat([df]*10, ignore_index=True)
-
+# Adjust the 'Target' column by dividing by the number of months
+df_replicated['Target'] = df_replicated['Target'] / num_months
 
 
     # Filter the concatenated DataFrame to include only endorsements
@@ -247,10 +250,6 @@ df_lost = df[df['Status'] == 'Lost 😢']
 df_agent = df[df['Channel'] == 'Agent']
 df_direct = df[df['Channel'] == 'Direct']
 df_broker = df[df['Channel'] == 'Broker']
-
-df_proactiv_target = df[df['Product'] == 'ProActiv']
-df_health_target = df[df['Product'] == 'Health']
-df_renewals = df[df['Product'] == 'Renewals']
 
 df_closed_health = df_closed[df_closed['Product'] == 'Health']
 df_lost_pro = df_lost[df_lost['Product'] == 'ProActiv']
