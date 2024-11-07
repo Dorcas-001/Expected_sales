@@ -423,15 +423,15 @@ if not df.empty:
 
     st.markdown('<h3 class="custom-subheader">For Expected Health Insurance or ProActiv Sales</h3>', unsafe_allow_html=True)  
     # Display metrics
-    col1, col2, col3= st.columns(3)
+    col1, col2, col3, col4= st.columns(4)
     display_metric(col1, f"Total Clients ({filter_description.strip()})", total_clients)
     display_metric(col2, "Total Closed Sales", f"RWF {total_closed:.0f} M")
     display_metric(col3, "Total Target 2024", f"RWF {target_2024:.0f} M")
 
-    display_metric(col1, "Total Principal Members", total_mem)
+    display_metric(col4, "Total Principal Members", total_mem)
 
-    display_metric(col2, "Average Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
-    display_metric(col3, "Average Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
+    # display_metric(col2, "Average Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
+    # display_metric(col3, "Average Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
 
 
 
