@@ -169,10 +169,6 @@ engage = st.sidebar.multiselect("Select Engagement", options=df['Engagement'].un
 owner = st.sidebar.multiselect("Select Sales Team", options=df['Owner'].unique())
 
 
-
-
-
-
 # Apply filters to the DataFrame
 if 'Start Year' in df.columns and year:
     df = df[df['Start Year'].isin(year)]
@@ -231,7 +227,7 @@ for month in months:
 # Adjust the 'Target' column by dividing by the number of months
 df_replicated['Target'] = df_replicated['Target'] / num_months
 
-
+df
 # Handle non-finite values in 'Start Year' column
 df['Start Year'] = df['Start Year'].fillna(0).astype(int)  # Replace NaN with 0 or any specific value
 

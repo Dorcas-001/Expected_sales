@@ -305,7 +305,7 @@ if not df.empty:
     total_health_target = (df_health_target['Target'].sum())/scale
     health_variance = (total_closed_health-total_health_target)
     health_percent_var = (health_variance/total_health_target) *100
-    
+    total_health_target
     pro_variance = total_closed_pro-total_pro_target
     pro_percent_var = (pro_variance/total_pro_target) *100
 
