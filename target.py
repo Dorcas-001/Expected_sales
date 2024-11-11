@@ -227,7 +227,7 @@ for month in months:
 # Adjust the 'Target' column by dividing by the number of months
 df_replicated['Target'] = df_replicated['Target'] / num_months
 
-df
+
 # Handle non-finite values in 'Start Year' column
 df['Start Year'] = df['Start Year'].fillna(0).astype(int)  # Replace NaN with 0 or any specific value
 

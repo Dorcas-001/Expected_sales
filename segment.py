@@ -408,17 +408,17 @@ if not df.empty:
     col1, col2, col3 = st.columns(3)
 
     # Display metrics
-    display_metric(col1, f"Total Clients ({filter_description.strip()})", total_clients)
+    display_metric(col1, f"Total Expected Clients ({filter_description.strip()})", total_clients)
     display_metric(col2, f"Total Expected Sales ({filter_description.strip()})", f"RWF {total_pre_scaled:.0f} M")
-    display_metric(col3, "Total Principal Members", total_mem)
+    display_metric(col3, "Total Expected Principal Members", total_mem)
 
-    display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
-    display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
+    # display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
+    # display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
 
-    display_metric(col3, "Total Closed Sales", f"RWF {total_closed:.0f} M")
-    display_metric(col1, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
-    display_metric(col2, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
-    display_metric(col3, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
+    display_metric(col1, "Total Expected Closed Sales", f"RWF {total_closed:.0f} M")
+    display_metric(col2, "Total Expected Lost Sales", f"RWF {total_lost:.0f} M",)
+    display_metric(col3, "Percentage Expected Closed Sales", value=f"{percent_closed:.1f} %")
+    display_metric(col1, "Percentage Expected Lost Sales", value=f"{percent_lost:.1f} %")
 
     st.markdown('<h3 class="custom-subheader">For Expected Health Insurance Sales by Client Segment</h3>', unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
@@ -554,7 +554,7 @@ if not df.empty:
     cols1,cols2 = st.columns(2)
 
     # Group data by "Start Month Year" and "Client Segment" and calculate the average Basic Premium RWF
-    yearly_avg_premium = df.groupby(['Start Year', 'Client Segment'])['Basic Premium RWF'].mean().unstack().fillna(0)
+    yearly_avg_premium = df.groupby(['Start Year', 'Client Segment'])['Basic Premium RWF'].sum().unstack().fillna(0)
 
     # Define custom colors
 
@@ -576,7 +576,7 @@ if not df.empty:
         fig_yearly_avg_premium.update_layout(
             barmode='group',  # Grouped bar chart
             xaxis_title="Start Year",
-            yaxis_title="Average Insured Premium",
+            yaxis_title="Basic Premium RWF",
             font=dict(color='Black'),
             xaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
             yaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
@@ -589,12 +589,12 @@ if not df.empty:
         st.plotly_chart(fig_yearly_avg_premium, use_container_width=True)
 
     # Calculate the Basic Premium RWF by Client Segment
-    int_premiums = df.groupby("Client Segment")["Basic Premium RWF"].mean().reset_index()
+    int_premiums = df.groupby("Client Segment")["Basic Premium RWF"].sum().reset_index()
     int_premiums.columns = ["Client Segment", "Basic Premium RWF"]    
 
     with cols2:
         # Display the header
-        st.markdown('<h3 class="custom-subheader">Average Expected Sales by Client Segment</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Total Expected Sales by Client Segment</h3>', unsafe_allow_html=True)
 
         # Create a donut chart
         fig = px.pie(int_premiums, names="Client Segment", values="Basic Premium RWF", hole=0.5, template="plotly_dark", color_discrete_sequence=custom_colors)

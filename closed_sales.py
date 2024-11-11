@@ -336,6 +336,8 @@ if not df.empty:
         </style>
         """, unsafe_allow_html=True)
 
+    df = df[(df['Status'] == 'Closed 💪')]
+
     # Function to display metrics in styled boxes
     def display_metric(col, title, value):
         col.markdown(f"""
@@ -354,13 +356,13 @@ if not df.empty:
     display_metric(col2, f"Total Expected Sales ({filter_description.strip()})", f"RWF {total_pre_scaled:.0f} M")
     display_metric(col3, "Total Principal Members", total_mem)
 
-    display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
-    display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
+    # display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
+    # display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
 
-    display_metric(col3, "Total Closed Sales", f"RWF {total_closed:.0f} M")
-    display_metric(col1, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
-    display_metric(col2, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
-    display_metric(col3, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
+    display_metric(col1, "Total Closed Sales", f"RWF {total_closed:.0f} M")
+    display_metric(col2, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
+    display_metric(col3, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
+    display_metric(col1, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
 
 
     st.markdown('<h2 class="custom-subheader">For Closed Health Insurance Sales</h2>', unsafe_allow_html=True) 
@@ -483,7 +485,7 @@ if not df.empty:
 
 
     # Group data by "Start Month Year" and "Client Segment" and calculate the average Basic Premium RWF
-    yearly_avg_premium = df.groupby(['Start Year', 'Status'])['Basic Premium RWF'].mean().unstack().fillna(0)
+    yearly_avg_premium = df.groupby(['Start Year', 'Status'])['Basic Premium RWF'].sum().unstack().fillna(0)
 
     # Define custom colors
 
@@ -514,7 +516,7 @@ if not df.empty:
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Average Yearly Sales by Status per Employer Group</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Total Closed Yearly Sales by Status</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_yearly_avg_premium, use_container_width=True)
 
 
@@ -601,7 +603,7 @@ if not df.empty:
     cols1, cols2 = st.columns(2)
 
     # Group data by "Start Month Year" and "Client Segment" and calculate the average Basic Premium RWF
-    yearly_avg_premium = df.groupby(['Start Year', 'Product'])['Basic Premium RWF'].mean().unstack().fillna(0)
+    yearly_avg_premium = df.groupby(['Start Year', 'Product'])['Basic Premium RWF'].sum().unstack().fillna(0)
 
     # Define custom colors
 
@@ -632,11 +634,11 @@ if not df.empty:
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Average Yearly Sales by Product per Employer Group</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Total Closed Yearly Sales by Product per Employer Group</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_yearly_avg_premium, use_container_width=True)
 
     # Group data by "Start Month Year" and "Client Segment" and calculate the average Basic Premium RWF
-    yearly_avg_premium = df.groupby(['Owner', 'Status'])['Basic Premium RWF'].mean().unstack().fillna(0)
+    yearly_avg_premium = df.groupby(['Owner', 'Status'])['Basic Premium RWF'].sum().unstack().fillna(0)
 
     # Define custom colors
 
@@ -667,7 +669,7 @@ if not df.empty:
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Average Sales Status by Sales Team per Employer Group</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="custom-subheader">Total Closed Sales Status by Sales Team per Employer Group</h3>', unsafe_allow_html=True)
         st.plotly_chart(fig_yearly_avg_premium, use_container_width=True)
 
     cl1, cl2 =st.columns(2)

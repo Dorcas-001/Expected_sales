@@ -417,8 +417,8 @@ if not df.empty:
     display_metric(col3, "Total Expected Principal Members", total_mem)
     display_metric(col1, "Total Expected Dependents", f" {total_dependents:.0f} ")
 
-    display_metric(col2, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
-    display_metric(col3, "Average Dependents Per Principal Member", f"{average_dep:.0f}")
+    # display_metric(col2, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
+    display_metric(col2, "Average Dependents Per Principal Member", f"{average_dep:.0f}")
 
 
     st.markdown('<h3 class="custom-subheader">For Expected Health Insurance Lives Covered</h3>', unsafe_allow_html=True)
