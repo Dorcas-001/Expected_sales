@@ -90,7 +90,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-df = data[data['Status'].isin(['Closed 💪', 'Lost 😢'])]
+df = data[data['Status_def'].isin(['Closed 💪', 'Lost 😢'])]
 
 
 # Get minimum and maximum dates for the date input
@@ -273,15 +273,16 @@ if not df.empty:
     total_closed_health = (df_closed_health['Basic Premium RWF'].sum())/scale
     total_closed_pro = (df_closed_pro['Basic Premium RWF'].sum())/scale
 
-    data["Employee Size"] = pd.to_numeric(data["Employee Size"], errors='coerce').fillna(0).astype(int)
-    data["Dependents"] = pd.to_numeric(data["Targeted Lives (depentands) "], errors='coerce').fillna(0).astype(int)
-
     # Calculate Basic Premium RWFs for specific combinations
     total_lost_health = (df_lost_health['Basic Premium RWF'].sum())/scale
     total_lost_pro = (df_lost_pro['Basic Premium RWF'].sum())/scale
-    total_clients = data["Property"].nunique()
-    total_mem = data["Employee Size"].sum()
-    total_dependents = data["Dependents"].sum()
+
+    df["Employee Size"] = pd.to_numeric(df["Employee Size"], errors='coerce').fillna(0).astype(int)
+    df["Dependents"] = pd.to_numeric(df["Targeted Lives (depentands) "], errors='coerce').fillna(0).astype(int)
+
+    total_clients = df["Property"].nunique()
+    total_mem = df["Employee Size"].sum()
+    total_dependents = df["Dependents"].sum()
     total_lives = total_mem +total_dependents
     average_dep = total_mem/total_dependents
     average_pre = data["Basic Premium RWF"].mean()
@@ -290,8 +291,7 @@ if not df.empty:
 
 
 
-    tot_lost =  total_lost/total_pre
-    tot_closed = total_closed/total_pre
+   
     percent_closed_health = (total_closed_health/total_health)*100
     percent_closed_pro = (total_closed_pro/total_proactiv)*100
     percent_lost_health = (total_lost_health/total_health)*100
@@ -336,7 +336,6 @@ if not df.empty:
         </style>
         """, unsafe_allow_html=True)
 
-    df = df[(df['Status'] == 'Closed 💪')]
 
     # Function to display metrics in styled boxes
     def display_metric(col, title, value):
@@ -379,7 +378,7 @@ if not df.empty:
 
     display_metric(col1, "Total Expected ProActiv Sales", value=f"RWF {total_proactiv:.0f} M")
     display_metric(col2, "Total Closed ProActiv Sales", value=f"RWF {total_closed_pro:.0f} M")
-    display_metric(col3, "Total Lost ProActiv Sales", value=f"RWF {total_lost_health:.0f} M")
+    display_metric(col3, "Total Lost ProActiv Sales", value=f"RWF {total_lost_pro:.0f} M")
     display_metric(col1, "Percentage Closed ProActiv Sales", value=f" {percent_closed_pro:.1f} %")
     display_metric(col2, "Percentage Lost ProActiv Sales", value=f" {percent_lost_pro:.1f} %")
 
