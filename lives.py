@@ -486,6 +486,9 @@ if not df.empty:
         """, unsafe_allow_html=True)
     
     custom_colors = ["#006E7F", "#e66c37", "#461b09","#009DAE", "#f8a785", "#CC3636","#C6E7FF","#FFB38E" , "#E4E0E1"]
+    
+    df["Expected Close Date"] = pd.to_datetime(df["Expected Close Date"], errors='coerce')
+    df["Start Year"] = df["Expected Close Date"].dt.year
 
     cul1, cul2 =st.columns(2)
 # Group by day and intermediary, then sum the Total Premium

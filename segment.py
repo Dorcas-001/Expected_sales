@@ -491,7 +491,8 @@ if not df.empty:
     
     custom_colors = ["#006E7F", "#e66c37", "#461b09", "#f8a785", "#CC3636"]
 
-
+    df["Expected Close Date"] = pd.to_datetime(df["Expected Close Date"], errors='coerce')
+    df["Start Year"] = df["Expected Close Date"].dt.year
 
     colc1, colc2 = st.columns(2)
     # Sample function to format y-axis labels

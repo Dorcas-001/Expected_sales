@@ -401,6 +401,8 @@ if not df.empty:
 
     custom_colors = ["#006E7F", "#e66c37", "#461b09","#009DAE", "#f8a785", "#CC3636"]
 
+    df["Expected Close Date"] = pd.to_datetime(df["Expected Close Date"], errors='coerce')
+    df["Start Year"] = df["Expected Close Date"].dt.year
   
     # Group data by "Owner" and sum the Basic Premium RWF
     premium_by_intermediary = df.groupby('Sales person')['Basic Premium RWF'].sum().reset_index()
