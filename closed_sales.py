@@ -437,6 +437,7 @@ if not df.empty:
 
     df["Expected Close Date"] = pd.to_datetime(df["Expected Close Date"], errors='coerce')
     df["Start Year"] = df["Expected Close Date"].dt.year
+
         # Function to format y-axis labels in millions
     def millions(x, pos):
         'The two args are the value and tick position'
@@ -719,38 +720,40 @@ if not df.empty:
         with st.expander("Total sales by client segment"):
             st.dataframe(int_seg.style.format(precision=2))
         
-    # Group data by "Owner" and sum the Basic Premium RWF
-    premium_by_intermediary = df_health.groupby('Sales person')['Basic Premium RWF'].sum().reset_index()
+    # Group data by "Broker" and "Status" and sum the Basic Premium RWF
+    premium_by_intermediary_status = df.groupby(['Broker', 'Status'])['Basic Premium RWF'].sum().reset_index()
 
-    # Calculate the number of sales by "Owner"
-    sales_by_cover = df_health.groupby('Sales person').size().reset_index(name='Number of Sales')
+    # Calculate the number of sales by "Broker" and "Status"
+    sales_by_intermediary_status = df.groupby(['Broker', 'Status']).size().reset_index(name='Number of Sales')
 
     # Merge the premium and sales data
-    merged_df = premium_by_intermediary.merge(sales_by_cover, on='Sales person')
+    merged_df_intermediary_status = premium_by_intermediary_status.merge(sales_by_intermediary_status, on=['Broker', 'Status'])
 
-    # Sort the merged data by Basic Premium RWF in descending order and select the top 10 owners
-    top_10_owners = merged_df.sort_values(by='Basic Premium RWF', ascending=False).head(10)
+    # Sort the merged data by Basic Premium RWF in descending order and select the top 10
+    top_10_intermediary_status = merged_df_intermediary_status.sort_values(by='Basic Premium RWF', ascending=False).head(10)
 
     # Create the layout columns
     cls1, cls2 = st.columns(2)
 
     with cls1:
-        fig_premium_by_intermediary = go.Figure()
+        fig_premium_by_intermediary_status = go.Figure()
 
-        # Add bar trace for Basic Premium RWF
-        fig_premium_by_intermediary.add_trace(go.Bar(
-            x=top_10_owners['Sales person'],
-            y=top_10_owners['Basic Premium RWF'],
-            text=top_10_owners['Basic Premium RWF'],
-            textposition='inside',
-            textfont=dict(color='white'),
-            hoverinfo='x+y',
-            marker_color='#009DAE',
-            name='Basic Premium RWF'
-        ))
+        # Add bar traces for each Status with custom colors
+        for idx, status in enumerate(top_10_intermediary_status['Status'].unique()):
+            filtered_data = top_10_intermediary_status[top_10_intermediary_status['Status'] == status]
+            fig_premium_by_intermediary_status.add_trace(go.Bar(
+                x=filtered_data['Broker'],
+                y=filtered_data['Basic Premium RWF'],
+                text=filtered_data['Basic Premium RWF'],
+                textposition='inside',
+                textfont=dict(color='white'),
+                hoverinfo='x+y',
+                name=status,
+                marker_color=custom_colors[idx % len(custom_colors)]  # Use custom colors
+            ))
 
         # Set layout for the chart
-        fig_premium_by_intermediary.update_layout(
+        fig_premium_by_intermediary_status.update_layout(
             xaxis_title="Sales Person",
             yaxis=dict(
                 title="Basic Premium RWF",
@@ -760,182 +763,45 @@ if not df.empty:
             font=dict(color='Black'),
             xaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
             margin=dict(l=0, r=0, t=30, b=50),
+            barmode='stack'  # To stack the bars on top of each other
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Top 10 Health Insurance Sales by Sales Persons</h3>', unsafe_allow_html=True)
-        st.plotly_chart(fig_premium_by_intermediary, use_container_width=True)
-
-    # Group data by "Intermediary name" and sum the Basic Premium RWF
-    premium_by_intermediary = df_proactiv.groupby('Sales person')['Basic Premium RWF'].sum().reset_index()
-
-    # Calculate the number of sales by "Intermediary name"
-    sales_by_intermediary = df_proactiv.groupby('Sales person').size().reset_index(name='Number of Sales')
-
-    # Merge the premium and sales data
-    merged_data = premium_by_intermediary.merge(sales_by_intermediary, on='Sales person')
+        st.markdown('<h3 class="custom-subheader">Top 10 Sales by Brokers and Status</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_premium_by_intermediary_status, use_container_width=True)
 
 
-    with cls2:
-        fig_premium_by_intermediary = go.Figure()
+    # Group data by "Property" and "Status" and sum the Basic Premium RWF
+    premium_by_property_status = df.groupby(['Property', 'Status'])['Basic Premium RWF'].sum().reset_index()
 
-        # Add bar trace for Basic Premium RWF
-        fig_premium_by_intermediary.add_trace(go.Bar(
-            x=merged_data['Sales person'],
-            y=merged_data['Basic Premium RWF'],
-            text=merged_data['Basic Premium RWF'],
-            textposition='inside',
-            textfont=dict(color='white'),
-            hoverinfo='x+y',
-            marker_color='#009DAE',
-            name='Basic Premium RWF'
-        ))
-
-
-        # Set layout for the chart
-        fig_premium_by_intermediary.update_layout(
-            yaxis=dict(
-                title="Basic Premium RWF",
-                titlefont=dict(color="#009DAE"),
-                tickfont=dict(color="#009DAE")
-            ),
-
-            font=dict(color='Black'),
-            xaxis=dict(
-                 title = "Sales Persons",
-                 title_font=dict(size=14), tickfont=dict(size=12)),
-            margin=dict(l=0, r=0, t=30, b=50),
-        )
-
-        # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Total ProActiv Sales by Sales Persons</h3>', unsafe_allow_html=True)
-        st.plotly_chart(fig_premium_by_intermediary, use_container_width=True)
-
-
-    cl1, cl2 =st.columns(2)
-
-# Count the occurrences of each Status
-    prod_counts = df["Channel"].value_counts().reset_index()
-    prod_counts.columns = ["Channel", "Count"]
-
-    with cls2:
-        # Display the header
-        st.markdown('<h3 class="custom-subheader">Number of Sales By Channel</h3>', unsafe_allow_html=True)
-
-        # Create a donut chart
-        fig = px.pie(prod_counts, names="Channel", values="Count", hole=0.5, template="plotly_dark", color_discrete_sequence=custom_colors)
-        fig.update_traces(textposition='inside', textinfo='value+percent')
-        fig.update_layout(height=450, margin=dict(l=0, r=10, t=30, b=50))
-
-        # Display the chart in Streamlit
-        st.plotly_chart(fig, use_container_width=True)
-
-
-
-# Count the occurrences of each Status
-    prod_counts = df["Status"].value_counts().reset_index()
-    prod_counts.columns = ["Status", "Count"]
-
-    with cls1:
-        # Display the header
-        st.markdown('<h3 class="custom-subheader">Number of Sales By Status</h3>', unsafe_allow_html=True)
-
-        # Create a donut chart
-        fig = px.pie(prod_counts, names="Status", values="Count", hole=0.5, template="plotly_dark", color_discrete_sequence=custom_colors)
-        fig.update_traces(textposition='inside', textinfo='value+percent')
-        fig.update_layout(height=450, margin=dict(l=0, r=10, t=30, b=50))
-
-        # Display the chart in Streamlit
-        st.plotly_chart(fig, use_container_width=True)
-
-    cl1, cl2 =st.columns(2)
-
-    with cl1:  
-            with st.expander("Total Status Premium"):
-                    st.dataframe(int_owner.style.format(precision=2))
-    with cl2:
-        with st.expander("Total sales by channel"):
-            st.dataframe(int_seg.style.format(precision=2))
-
-
-    # Group data by "Owner" and sum the Basic Premium RWF
-    premium_by_intermediary = df_health.groupby('Broker')['Basic Premium RWF'].sum().reset_index()
-
-    # Calculate the number of sales by "Owner"
-    sales_by_cover = df_health.groupby('Broker').size().reset_index(name='Number of Sales')
+    # Calculate the number of sales by "Property" and "Status"
+    sales_by_property_status = df.groupby(['Property', 'Status']).size().reset_index(name='Number of Sales')
 
     # Merge the premium and sales data
-    merged_df = premium_by_intermediary.merge(sales_by_cover, on='Broker')
+    merged_df_property_status = premium_by_property_status.merge(sales_by_property_status, on=['Property', 'Status'])
 
-    # Sort the merged data by Basic Premium RWF in descending order and select the top 10 owners
-    top_10_owners = merged_df.sort_values(by='Basic Premium RWF', ascending=False).head(10)
-
-    # Create the layout columns
-    cls1, cls2 = st.columns(2)
-
-    with cls1:
-        fig_premium_by_intermediary = go.Figure()
-
-        # Add bar trace for Basic Premium RWF
-        fig_premium_by_intermediary.add_trace(go.Bar(
-            x=top_10_owners['Broker'],
-            y=top_10_owners['Basic Premium RWF'],
-            text=top_10_owners['Basic Premium RWF'],
-            textposition='inside',
-            textfont=dict(color='white'),
-            hoverinfo='x+y',
-            marker_color='#009DAE',
-            name='Basic Premium RWF'
-        ))
-
-        # Set layout for the chart
-        fig_premium_by_intermediary.update_layout(
-            xaxis_title="Sales Person",
-            yaxis=dict(
-                title="Basic Premium RWF",
-                titlefont=dict(color="#009DAE"),
-                tickfont=dict(color="#009DAE")
-            ),
-            font=dict(color='Black'),
-            xaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
-            margin=dict(l=0, r=0, t=30, b=50),
-        )
-
-        # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Top 10 Sales by Brokers</h3>', unsafe_allow_html=True)
-        st.plotly_chart(fig_premium_by_intermediary, use_container_width=True)
-
-
-    # Group data by "Owner" and sum the Basic Premium RWF
-    premium_by_intermediary = df_health.groupby('Property')['Basic Premium RWF'].sum().reset_index()
-
-    # Calculate the number of sales by "Owner"
-    sales_by_cover = df_health.groupby('Property').size().reset_index(name='Number of Sales')
-
-    # Merge the premium and sales data
-    merged_df = premium_by_intermediary.merge(sales_by_cover, on='Property')
-
-    # Sort the merged data by Basic Premium RWF in descending order and select the top 10 owners
-    top_10_owners = merged_df.sort_values(by='Basic Premium RWF', ascending=False).head(10)
-
+    # Sort the merged data by Basic Premium RWF in descending order and select the top 10
+    top_10_property_status = merged_df_property_status.sort_values(by='Basic Premium RWF', ascending=False).head(10)
 
     with cls2:
-        fig_premium_by_intermediary = go.Figure()
+        fig_premium_by_property_status = go.Figure()
 
-        # Add bar trace for Basic Premium RWF
-        fig_premium_by_intermediary.add_trace(go.Bar(
-            x=top_10_owners['Property'],
-            y=top_10_owners['Basic Premium RWF'],
-            text=top_10_owners['Basic Premium RWF'],
-            textposition='inside',
-            textfont=dict(color='white'),
-            hoverinfo='x+y',
-            marker_color='#009DAE',
-            name='Basic Premium RWF'
-        ))
+        # Add bar traces for each Status with custom colors
+        for idx, status in enumerate(top_10_property_status['Status'].unique()):
+            filtered_data = top_10_property_status[top_10_property_status['Status'] == status]
+            fig_premium_by_property_status.add_trace(go.Bar(
+                x=filtered_data['Property'],
+                y=filtered_data['Basic Premium RWF'],
+                text=filtered_data['Basic Premium RWF'],
+                textposition='inside',
+                textfont=dict(color='white'),
+                hoverinfo='x+y',
+                name=status,
+                marker_color=custom_colors[idx % len(custom_colors)]  # Use custom colors
+            ))
 
         # Set layout for the chart
-        fig_premium_by_intermediary.update_layout(
+        fig_premium_by_property_status.update_layout(
             xaxis_title="Employer Group",
             yaxis=dict(
                 title="Basic Premium RWF",
@@ -945,8 +811,9 @@ if not df.empty:
             font=dict(color='Black'),
             xaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
             margin=dict(l=0, r=0, t=30, b=50),
+            barmode='stack'  # To stack the bars on top of each other
         )
 
         # Display the chart in Streamlit
-        st.markdown('<h3 class="custom-subheader">Top 10 Sales Employer Groups</h3>', unsafe_allow_html=True)
-        st.plotly_chart(fig_premium_by_intermediary, use_container_width=True)
+        st.markdown('<h3 class="custom-subheader">Top 10 Sales by Employer Groups and Status</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_premium_by_property_status, use_container_width=True)
