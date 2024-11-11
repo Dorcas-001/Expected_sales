@@ -204,8 +204,10 @@ df_proactiv = df[df['Product'] == 'ProActiv']
 df_health = df[df['Product'] == 'Health']
 
 
-df_closed = df[(df['Status'] == 'Closed 💪')]
-df_lost = df[df['Status'] == 'Lost 😢']
+
+df_closed = df[(df['Status_def'] == 'Closed 💪')]
+df_lost = df[df['Status_def'] == 'Lost 😢']
+df_progress = df[df['Status_def'] == 'In Progress']
 
 
 df_closed_health = df_closed[df_closed['Product'] == 'Health']
@@ -257,8 +259,7 @@ if not df.empty:
 
 
 
-    tot_lost =  total_lost/total_pre
-    tot_closed = total_closed/total_pre
+
     percent_closed_health = (total_closed_health/total_health)*100
     percent_closed_pro = (total_closed_pro/total_proactiv)*100
     percent_lost_health = (total_lost_health/total_health)*100

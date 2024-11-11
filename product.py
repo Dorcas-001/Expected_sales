@@ -204,8 +204,10 @@ df_proactiv = df[df['Product'] == 'ProActiv']
 df_health = df[df['Product'] == 'Health']
 
 
-df_closed = df[(df['Status'] == 'Closed 💪')]
-df_lost = df[df['Status'] == 'Lost 😢']
+
+df_closed = df[(df['Status_def'] == 'Closed 💪')]
+df_lost = df[df['Status_def'] == 'Lost 😢']
+df_progress = df[df['Status_def'] == 'In Progress']
 
 
 df_closed_health = df_closed[df_closed['Product'] == 'Health']
@@ -232,6 +234,7 @@ if not df.empty:
     # Calculate Basic Premium RWFs for specific combinations
     total_closed = (df_closed['Basic Premium RWF'].sum())/scale
     total_lost = (df_lost['Basic Premium RWF'].sum())/scale
+    total_progess = (df_progress['Basic Premium RWF'].sum())/scale
 
     # Calculate Basic Premium RWFs for specific combinations
     total_closed_health = (df_closed_health['Basic Premium RWF'].sum())/scale
@@ -262,6 +265,7 @@ if not df.empty:
     percent_lost_pro = (total_lost_pro/total_proactiv)*100
     percent_closed = (total_closed/total_pre_scaled)*100
     percent_lost = (total_lost/total_pre_scaled)*100
+    percent_progress = (total_progess/total_pre_scaled)*100
 
     average_pre_scaled = average_pre/scale
     gwp_average_scaled = gwp_average/scale
@@ -318,13 +322,14 @@ if not df.empty:
     display_metric(col2, f"Total Expected Sales ({filter_description.strip()})", f"RWF {total_pre_scaled:.0f} M")
     display_metric(col3, "Total Principal Members", total_mem)
 
-    display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
-    display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
+    # display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
+    # display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
 
-    display_metric(col3, "Total Closed Sales", f"RWF {total_closed:.0f} M")
-    display_metric(col1, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
-    display_metric(col2, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
-    display_metric(col3, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
+    display_metric(col1, "Total Closed Sales", f"RWF {total_closed:.0f} M")
+    display_metric(col2, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
+    display_metric(col3, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
+    display_metric(col1, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
+    display_metric(col2, "Percentage Sales in Progress", value=f"{percent_progress:.1f} %")
 
 
     st.markdown('<h2 class="custom-subheader">For Expected Health Insurance Sales</h2>', unsafe_allow_html=True) 

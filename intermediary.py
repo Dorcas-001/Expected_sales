@@ -289,8 +289,9 @@ df_proactiv = df[df['Product'] == 'ProActiv']
 df_health = df[df['Product'] == 'Health']
 
 
-df_closed = df[(df['Status'] == 'Closed 💪')]
-df_lost = df[df['Status'] == 'Lost 😢']
+df_closed = df[(df['Status_def'] == 'Closed 💪')]
+df_lost = df[df['Status_def'] == 'Lost 😢']
+df_progress = df[df['Status_def'] == 'In Progress']
 
 df_agent = df[df['Channel'] == 'Agent']
 df_direct = df[df['Channel'] == 'Direct']
@@ -360,6 +361,7 @@ if not df.empty:
     # Calculate Basic Premium RWFs for specific combinations
     total_lost_health = (df_lost_health['Basic Premium RWF'].sum())/scale
     total_lost_pro = (df_lost_pro['Basic Premium RWF'].sum())/scale
+    total_progess = (df_progress['Basic Premium RWF'].sum())/scale
 
     # Calculate Basic Premium RWFs for specific combinations
     total_pro_target = (df_proactiv_target['Target'].sum())/scale
@@ -384,14 +386,14 @@ if not df.empty:
 
 
 
-    tot_lost =  total_lost/total_pre
-    tot_closed = total_closed/total_pre
+
     percent_closed_health = (total_closed_health/total_health)*100
     percent_closed_pro = (total_closed_pro/total_proactiv)*100
     percent_lost_health = (total_lost_health/total_health)*100
     percent_lost_pro = (total_lost_pro/total_proactiv)*100
     percent_closed = (total_closed/total_pre_scaled)*100
     percent_lost = (total_lost/total_pre_scaled)*100
+    percent_progress = (total_progess/total_pre_scaled)*100
 
 
     # Scale the sums
@@ -463,6 +465,7 @@ if not df.empty:
     display_metric(col2, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
     display_metric(col3, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
     display_metric(col1, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
+    display_metric(col2, "Percentage Sales in Progress", value=f"{percent_progress:.1f} %")
 
     st.markdown('<h3 class="custom-subheader">For Expected Health Insurance Sales by Channel</h3>', unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)

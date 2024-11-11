@@ -245,8 +245,10 @@ df_proactiv = df[df['Product'] == 'ProActiv']
 df_health = df[df['Product'] == 'Health']
 
 
-df_closed = df[(df['Status'] == 'Closed 💪')]
-df_lost = df[df['Status'] == 'Lost 😢']
+df_closed = df[(df['Status_def'] == 'Closed 💪')]
+df_lost = df[df['Status_def'] == 'Lost 😢']
+df_progress = df[df['Status_def'] == 'In Progress']
+
 df_agent = df[df['Channel'] == 'Agent']
 df_direct = df[df['Channel'] == 'Direct']
 df_broker = df[df['Channel'] == 'Broker']
@@ -291,6 +293,7 @@ if not df.empty:
     # Calculate Basic Premium RWFs for specific combinations
     total_closed = (df_closed['Basic Premium RWF'].sum())/scale
     total_lost = (df_lost['Basic Premium RWF'].sum())/scale
+    total_progess = (df_progress['Basic Premium RWF'].sum())/scale
 
     # Calculate Basic Premium RWFs for specific combinations
     total_closed_health = (df_closed_health['Basic Premium RWF'].sum())/scale
@@ -305,7 +308,6 @@ if not df.empty:
     total_health_target = (df_health_target['Target'].sum())/scale
     health_variance = (total_closed_health-total_health_target)
     health_percent_var = (health_variance/total_health_target) *100
-    total_health_target
     pro_variance = total_closed_pro-total_pro_target
     pro_percent_var = (pro_variance/total_pro_target) *100
 
@@ -323,16 +325,13 @@ if not df.empty:
 
 
 
-    tot_lost =  total_lost/total_pre
-    tot_closed = total_closed/total_pre
     percent_closed_health = (total_closed_health/total_health)*100
     percent_closed_pro = (total_closed_pro/total_proactiv)*100
     percent_lost_health = (total_lost_health/total_health)*100
     percent_lost_pro = (total_lost_pro/total_proactiv)*100
     percent_closed = (total_closed/total_pre_scaled)*100
     percent_lost = (total_lost/total_pre_scaled)*100
-
-
+    percent_progress = (total_progess/total_pre_scaled)*100
     # Scale the sums
     average_pre_scaled = average_pre/scale
     gwp_average_scaled = gwp_average/scale
@@ -406,6 +405,7 @@ if not df.empty:
     display_metric(col3, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
     display_metric(col1, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
     display_metric(col2, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
+    display_metric(col3, "Percentage Sales in Progress", value=f"{percent_progress:.1f} %")
 
 
     # Calculate key metrics

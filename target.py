@@ -167,6 +167,7 @@ month = st.sidebar.multiselect("Select Month", options=sorted_months)
 product = st.sidebar.multiselect("Select Product", options=df['Product'].unique())
 engage = st.sidebar.multiselect("Select Engagement", options=df['Engagement'].unique())
 owner = st.sidebar.multiselect("Select Sales Team", options=df['Owner'].unique())
+person = st.sidebar.multiselect("Select Sales Person", options=df['Sales person'].unique())
 
 
 # Apply filters to the DataFrame
@@ -178,7 +179,8 @@ if 'Product' in df.columns and product:
     df = df[df['Product'].isin(product)]
 if 'Owner' in df.columns and owner:
     df = df[df['Owner'].isin(owner)]
-
+if 'Sales person' in df.columns and person:
+    df = df[df['Sales person'].isin(person)]
 
 # Determine the filter description
 filter_description = ""
@@ -276,8 +278,10 @@ df_proactiv = df[df['Product'] == 'ProActiv']
 df_health = df[df['Product'] == 'Health']
 
 
-df_closed = df[(df['Status'] == 'Closed 💪')]
-df_lost = df[df['Status'] == 'Lost 😢']
+
+df_closed = df[(df['Status_def'] == 'Closed 💪')]
+df_lost = df[df['Status_def'] == 'Lost 😢']
+df_progress = df[df['Status_def'] == 'In Progress']
 
 df_agent = df[df['Channel'] == 'Agent']
 df_direct = df[df['Channel'] == 'Direct']
@@ -319,6 +323,7 @@ if not df.empty:
     # Calculate Basic Premium RWFs for specific combinations
     total_closed_health = (df_closed_health['Basic Premium RWF'].sum())/scale
     total_closed_pro = (df_closed_pro['Basic Premium RWF'].sum())/scale
+    total_progess = (df_progress['Basic Premium RWF'].sum())/scale
 
 
     total_pro_target = (df_proactiv_target['Target'].sum())/scale
