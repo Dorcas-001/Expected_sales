@@ -459,10 +459,10 @@ if not df.empty:
     # display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
     # display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
 
-    display_metric(col1, "Total Expected Closed Sales", f"RWF {total_closed:.0f} M")
-    display_metric(col2, "Total Expected Lost Sales", f"RWF {total_lost:.0f} M",)
-    display_metric(col3, "Percentage Expected Closed Sales", value=f"{percent_closed:.1f} %")
-    display_metric(col1, "Percentage Expected Lost Sales", value=f"{percent_lost:.1f} %")
+    display_metric(col1, "Total Closed Sales", f"RWF {total_closed:.0f} M")
+    display_metric(col2, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
+    display_metric(col3, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
+    display_metric(col1, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
 
     st.markdown('<h3 class="custom-subheader">For Expected Health Insurance Sales by Channel</h3>', unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
