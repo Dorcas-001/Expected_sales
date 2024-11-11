@@ -415,27 +415,27 @@ if not df.empty:
     # display_metric(col1, "Average Expected Sale Per Principal Member", f"RWF {average_pre_scaled:.0f}M")
     # display_metric(col2, "Average Expected Sale per Employer group", f"RWF {gwp_average_scaled:.0f} M")
 
-    display_metric(col1, "Total Expected Closed Sales", f"RWF {total_closed:.0f} M")
-    display_metric(col2, "Total Expected Lost Sales", f"RWF {total_lost:.0f} M",)
-    display_metric(col3, "Percentage Expected Closed Sales", value=f"{percent_closed:.1f} %")
-    display_metric(col1, "Percentage Expected Lost Sales", value=f"{percent_lost:.1f} %")
+    display_metric(col1, "Total Closed Sales", f"RWF {total_closed:.0f} M")
+    display_metric(col2, "Total Lost Sales", f"RWF {total_lost:.0f} M",)
+    display_metric(col3, "Percentage Closed Sales", value=f"{percent_closed:.1f} %")
+    display_metric(col1, "Percentage Lost Sales", value=f"{percent_lost:.1f} %")
 
     st.markdown('<h3 class="custom-subheader">For Expected Health Insurance Sales by Client Segment</h3>', unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
 
-    display_metric(col1, "Expected Health Whales Sales", value=f"RWF {total_whales_health:.0f} M")
-    display_metric(col2, "Expected Health Elephants Sales", value=f"RWF {total_elephants_health:.0f} M")
-    display_metric(col3, "Expected Health Tigers Sales", value=f"RWF {total_tigers_health:.0f} M")
-    display_metric(col4, "Expected Health Hares Sales", value=f"RWF {total_hares_health:.0f} M")
+    display_metric(col1, "Expected Whales Sales", value=f"RWF {total_whales_health:.0f} M")
+    display_metric(col2, "Expected Elephants Sales", value=f"RWF {total_elephants_health:.0f} M")
+    display_metric(col3, "Expected Tigers Sales", value=f"RWF {total_tigers_health:.0f} M")
+    display_metric(col4, "Expected Hares Sales", value=f"RWF {total_hares_health:.0f} M")
 
 
     st.markdown('<h3 class="custom-subheader">For Expected ProActiv Sales by Client Segment</h3>', unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
 
-    display_metric(col1, "Expected ProActiv Whales Sales", value=f"RWF {total_whales_pro:.0f} M")
-    display_metric(col2, "Expected ProActiv Elephants Sales", value=f"RWF {total_elephants_pro:.0f} M")
-    display_metric(col3, "Expected ProActiv Tigers Sales", value=f"RWF {total_tigers_pro:.0f} M")
-    display_metric(col4, "Expected ProActiv Hares Sales", value=f"RWF {total_hares_pro:.0f} M")
+    display_metric(col1, "Expected Whales Sales", value=f"RWF {total_whales_pro:.0f} M")
+    display_metric(col2, "Expected Elephants Sales", value=f"RWF {total_elephants_pro:.0f} M")
+    display_metric(col3, "Expected Tigers Sales", value=f"RWF {total_tigers_pro:.0f} M")
+    display_metric(col4, "Expected Hares Sales", value=f"RWF {total_hares_pro:.0f} M")
 
    
 
