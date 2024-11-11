@@ -467,16 +467,16 @@ if not df.empty:
     st.markdown('<h3 class="custom-subheader">For Expected Health Insurance Sales by Channel</h3>', unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
 
-    display_metric(col1, "Expected Health Agent Sales", value=f"RWF {total_agent_health:.0f} M")
-    display_metric(col2, "Expected Health Direct Sales", value=f"RWF {total_direct_health:.0f} M")
-    display_metric(col3, "Expected Health Broker Sales", value=f"RWF {total_broker_health:.0f} M")
+    display_metric(col1, "Expected Agent Sales", value=f"RWF {total_agent_health:.0f} M")
+    display_metric(col2, "Expected Direct Sales", value=f"RWF {total_direct_health:.0f} M")
+    display_metric(col3, "Expected Broker Sales", value=f"RWF {total_broker_health:.0f} M")
 
     st.markdown('<h3 class="custom-subheader">For Expected ProActiv Sales by Channel</h3>', unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
 
-    display_metric(col1, "Expected ProActiv Agent Sales", value=f"RWF {total_agent_pro:.0f} M")
-    display_metric(col2, "Expected ProActiv Direct Sales", value=f"RWF {total_direct_pro:.0f} M")
-    display_metric(col3, "Expected ProActiv Broker Sales", value=f"RWF {total_broker_pro:.0f} M")
+    display_metric(col1, "Expected Agent Sales", value=f"RWF {total_agent_pro:.0f} M")
+    display_metric(col2, "Expected Direct Sales", value=f"RWF {total_direct_pro:.0f} M")
+    display_metric(col3, "Expected Broker Sales", value=f"RWF {total_broker_pro:.0f} M")
 
 
 
