@@ -94,8 +94,8 @@ df = data[data['Status_def'].isin(['Closed 💪', 'Lost 😢'])]
 
 
 # Get minimum and maximum dates for the date input
-startDate = df["Expected Close Date"].min()
-endDate = df["Expected Close Date"].max()
+startDate = df["Last_update"].min()
+endDate = df["Last_update"].max()
 
 # Define CSS for the styled date input boxes
 st.markdown("""
@@ -129,10 +129,10 @@ def display_date_input(col, title, default_date, min_date, max_date):
 
 # Display date inputs
 with col1:
-    date1 = pd.to_datetime(display_date_input(col1, "Expected Close Date", startDate, startDate, endDate))
+    date1 = pd.to_datetime(display_date_input(col1, "Closed/Lost Date", startDate, startDate, endDate))
 
 with col2:
-    date2 = pd.to_datetime(display_date_input(col2, "Expected Close Date", endDate, startDate, endDate))
+    date2 = pd.to_datetime(display_date_input(col2, "Closed/Lost Date", endDate, startDate, endDate))
 
 # Convert dates to datetime
 df['Created_date'] = pd.to_datetime(df['Created_date'])
