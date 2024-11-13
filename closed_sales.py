@@ -134,6 +134,14 @@ with col1:
 with col2:
     date2 = pd.to_datetime(display_date_input(col2, "Expected Close Date", endDate, startDate, endDate))
 
+# Convert dates to datetime
+df['Created_date'] = pd.to_datetime(df['Created_date'])
+df['Last_update'] = pd.to_datetime(df['Last_update'])
+
+# Calculate the sales cycle length
+df['sales_cycle_length'] = (df['Last_update'] - df['Created_date']).dt.days
+
+
 
 # Dictionary to map month names to their order
 month_order = {
@@ -257,6 +265,24 @@ if not df.empty:
      # Calculate metrics
     scale=1_000_000  # For millions
 
+    # Number of Opportunities
+    number_of_opportunities = len(df)
+
+    # Average Deal Size
+    average_deal_size = (df_closed['Basic Premium RWF'].mean())/scale
+
+    won_deals = len(df_closed)
+    # Win Rate Percentage
+    win_rate_percentage = (won_deals / number_of_opportunities)*100
+    win_rate = (won_deals / number_of_opportunities)
+
+    # Average Sales Cycle Length
+    average_sales_cycle_length = df_closed['sales_cycle_length'].mean()
+
+    # Calculate Sales Velocity
+    sales_velocity = ((won_deals * average_deal_size * win_rate) / average_sales_cycle_length)
+
+
     total_pre = (data["Basic Premium RWF"].sum())
 
     # Scale the sums
@@ -345,6 +371,20 @@ if not df.empty:
                 <div class="metric-value">{value}</div>
             </div>
             """, unsafe_allow_html=True)
+
+
+    # Calculate key metrics
+    st.markdown('<h2 class="custom-subheader">Sales Velocity</h2>', unsafe_allow_html=True)    
+
+    cols1,cols2, cols3 = st.columns(3)
+
+    display_metric(cols1, "Number of Opportunities", number_of_opportunities)
+    display_metric(cols2, "Average Deal Size Per client", F"{average_deal_size: .0F} M")
+    display_metric(cols3, "Number of Closed Deals", won_deals)
+    display_metric(cols1, "Closed Rate Percentage", f"{win_rate_percentage:.1f} %")
+    display_metric(cols2, "Average sales cyle length Per Deal", f"{average_sales_cycle_length:.0f} days")
+    display_metric(cols3, "Sales Velocity Per Day", f"{sales_velocity:.0f} M")
+
 
     st.markdown('<h3 class="custom-subheader">For All Sales</h3>', unsafe_allow_html=True)
 
