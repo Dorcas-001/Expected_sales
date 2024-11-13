@@ -266,7 +266,7 @@ if not df.empty:
     scale=1_000_000  # For millions
 
     # Number of Opportunities
-    number_of_opportunities = len(df)
+    number_of_opportunities = len(data)
 
     # Average Deal Size
     average_deal_size = (df_closed['Basic Premium RWF'].mean())/scale
